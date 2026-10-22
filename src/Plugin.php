@@ -33,6 +33,7 @@ use TheStart\InlineEdit\Rows\TemplateSigner;
  * - `sd_inline_edit_style_formats` (filter) the rich text "Formats" dropdown, as TinyMCE style_formats.
  * - `sd_inline_edit_image_focus` (filter) an image's focus point as [x, y] percentages.
  * - `sd_inline_edit_save_image_focus` (action) store a focus point set on the page (see Images\FocusPoints).
+ * - `sd_inline_edit_layout_thumbnail` (filter) a block layout's picture in the block picker.
  * - `sd_inline_edit_assets_url` (filter) the URL of this package's dist/ folder.
  * - `sd_inline_edit_saved` (action) after a save, with `$post_id` (or 'options') and the field names.
  */

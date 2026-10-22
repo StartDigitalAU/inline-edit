@@ -53,6 +53,7 @@ final class RowList implements Versioned
 				'name' => $layout['name'],
 				'label' => $layout['label'],
 				'max' => (int) ($layout['max'] ?? 0),
+				'thumbnail' => LayoutThumbnails::url($layout, $this->acf),
 				'fields' => $this->summary($layout['sub_fields'] ?? []),
 			],
 			$this->isFlexible() ? array_values($this->acf['layouts']) : [],

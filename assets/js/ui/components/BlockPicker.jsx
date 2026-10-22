@@ -21,7 +21,11 @@ export function BlockPicker() {
 	return choice?.list.isFlexible ? <Picker key={choice.list} {...choice} /> : null
 }
 
+// With thumbnails, layouts show as a grid of pictures, this many across.
+const GRID_COLUMNS = 2
+
 function Picker({ list, index }) {
+	const visual = list.layouts.some(layout => layout.thumbnail)
 	const [query, setQuery] = useState('')
 	const layouts = matching(list.layouts, query)
 	const available = layouts.filter(layout => !list.isLayoutFull(layout.name))
@@ -48,10 +52,15 @@ function Picker({ list, index }) {
 		const current = names.indexOf(highlighted)
 		setHighlighted(names[(current + step + names.length) % names.length])
 	}
+	const steps = {
+		ArrowDown: visual ? GRID_COLUMNS : 1,
+		ArrowUp: visual ? -GRID_COLUMNS : -1,
+		...(visual ? { ArrowRight: 1, ArrowLeft: -1 } : {}),
+	}
 	const onKeyDown = event => {
-		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+		if (steps[event.key]) {
 			event.preventDefault()
-			move(event.key === 'ArrowDown' ? 1 : -1)
+			move(steps[event.key])
 		} else if (event.key === 'Enter') {
 			event.preventDefault()
 			choose(highlighted)
@@ -64,7 +73,7 @@ function Picker({ list, index }) {
 			onClick={event => event.target === event.currentTarget && close()}
 		>
 			<div
-				class="flex max-h-[min(560px,100%)] w-[min(560px,100%)] animate-pop flex-col overflow-hidden rounded-2xl bg-canvas shadow-float"
+				class={`flex max-h-[min(640px,100%)] animate-pop flex-col overflow-hidden rounded-2xl bg-canvas shadow-float ${visual ? 'w-[min(720px,100%)]' : 'w-[min(560px,100%)]'}`}
 				role="dialog"
 				aria-modal="true"
 				aria-label={`Add ${list.itemWithArticle}`}
@@ -93,13 +102,14 @@ function Picker({ list, index }) {
 					id="picker-list"
 					role="listbox"
 					aria-label="Blocks"
-					class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5"
+					class={`min-h-0 flex-1 overflow-y-auto overscroll-contain ${visual ? 'grid grid-cols-2 content-start gap-2 p-3 max-sm:grid-cols-1' : 'p-1.5'}`}
 					onMouseDown={event => event.preventDefault()}
 				>
 					{layouts.length ? (
 						layouts.map(layout => (
 							<LayoutOption
 								key={layout.name}
+								visual={visual}
 								layout={layout}
 								full={list.isLayoutFull(layout.name)}
 								highlighted={layout.name === highlighted}
@@ -108,12 +118,12 @@ function Picker({ list, index }) {
 							/>
 						))
 					) : (
-						<div class="px-4 py-8 text-center text-subtle">Nothing matches “{query.trim()}”</div>
+						<div class="col-span-full px-4 py-8 text-center text-subtle">Nothing matches “{query.trim()}”</div>
 					)}
 				</div>
 				<div class="flex shrink-0 gap-4 border-t border-edge px-4 py-2.5 text-xs text-subtle max-sm:hidden">
 					<span class="flex items-center gap-1.5">
-						<Kbd keys={['↑', '↓']} /> Choose
+						<Kbd keys={visual ? ['←', '↑', '→', '↓'] : ['↑', '↓']} /> Choose
 					</span>
 					<span class="flex items-center gap-1.5">
 						<Kbd keys={['↵']} /> Add
@@ -124,14 +134,62 @@ function Picker({ list, index }) {
 	)
 }
 
-function LayoutOption({ layout, full, highlighted, onHover, onChoose }) {
-	const option = useRef(null)
+function LayoutOption({ visual, ...props }) {
+	return visual ? <LayoutCard {...props} /> : <LayoutRow {...props} />
+}
+
+function useScrollIntoView(highlighted) {
+	const ref = useRef(null)
 	useEffect(() => {
 		if (highlighted) {
-			option.current.scrollIntoView({ block: 'nearest' })
+			ref.current.scrollIntoView({ block: 'nearest' })
 		}
 	}, [highlighted])
+	return ref
+}
 
+/**
+ * A layout as a picture of it, with its name.
+ */
+function LayoutCard({ layout, full, highlighted, onHover, onChoose }) {
+	const option = useScrollIntoView(highlighted)
+	return (
+		<button
+			ref={option}
+			type="button"
+			id={`layout-${layout.name}`}
+			role="option"
+			aria-selected={highlighted ? 'true' : 'false'}
+			disabled={full}
+			class={`flex flex-col gap-2 rounded-xl p-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${highlighted ? 'bg-hover' : ''}`}
+			onPointerMove={() => !full && !highlighted && onHover()}
+			onClick={onChoose}
+		>
+			<span
+				class={`grid aspect-[16/10] w-full place-items-center overflow-hidden rounded-lg transition-shadow ${layout.thumbnail ? 'bg-white' : 'bg-surface'} ${highlighted ? 'shadow-[0_0_0_2px_theme(colors.accent)]' : 'shadow-[inset_0_0_0_1px_theme(colors.edge)]'}`}
+			>
+				{layout.thumbnail ? (
+					// The whole block, scaled to fit: blocks are usually much wider than tall.
+					<img src={layout.thumbnail} alt="" class="size-full object-contain" loading="lazy" />
+				) : (
+					<span class="text-muted">
+						<LayoutGlyph fields={layout.fields} />
+					</span>
+				)}
+			</span>
+			<span class="flex items-baseline justify-between gap-2 px-0.5">
+				<span class="truncate font-medium">{layout.label}</span>
+				{full && <span class="shrink-0 text-xs text-amber">Limit reached</span>}
+			</span>
+		</button>
+	)
+}
+
+/**
+ * A layout as a sketch, its name and its fields.
+ */
+function LayoutRow({ layout, full, highlighted, onHover, onChoose }) {
+	const option = useScrollIntoView(highlighted)
 	const fields = layout.fields.map(field => field.label).join(' · ') || 'No fields'
 
 	return (
