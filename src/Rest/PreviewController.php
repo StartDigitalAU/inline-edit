@@ -4,6 +4,7 @@ namespace TheStart\InlineEdit\Rest;
 
 use TheStart\InlineEdit\Access;
 use TheStart\InlineEdit\Fields\Resolver;
+use TheStart\InlineEdit\Fields\Sanitizer;
 use TheStart\InlineEdit\Fields\VirtualRows;
 use TheStart\InlineEdit\Page\Registry;
 use TheStart\InlineEdit\Rows\RowFactory;
@@ -13,9 +14,9 @@ use WP_Error;
 use WP_REST_Request;
 
 /**
- * Renders a new, unsaved row with its list's row template, so the editor can show it on the page.
- * Nothing is saved. The row's fields come back editable under a temporary row index, which the
- * editor swaps for the row's real position when it saves.
+ * Renders one row with its list's row template, so the editor can show it on the page without
+ * saving: a new row, or an existing one with changed settings (`values`). The row's fields come back
+ * editable, named as the editor knows them.
  */
 final class PreviewController
 {
@@ -30,35 +31,25 @@ final class PreviewController
 
 	public function handle(WP_REST_Request $request): mixed
 	{
-		$invalid = new WP_Error('sd_inline_edit_invalid', __('That block can’t be added here.'), ['status' => 400]);
-
-		$post = $this->resolver->post($this->resolver->target($request['post']));
-		if (is_wp_error($post)) {
-			return $post;
-		}
-
 		if (!class_exists(Timber::class) || !$this->signer->verify($request['key'], $request['template'], $request['signature'])) {
-			return $invalid;
+			return new WP_Error('sd_inline_edit_invalid', __('That block can’t be shown here.'), ['status' => 400]);
 		}
 
-		$list = $this->listField($request['key'], $request['field']);
-		if (!$list || !$this->addParents($request['parents'])) {
-			return $invalid;
+		$row = RowRequest::from($request, $this->resolver, $this->rows, $this->virtual);
+		$raw = is_wp_error($row) ? $row : $row->rawValues($this->rows);
+		if (is_wp_error($raw)) {
+			$this->virtual->clear();
+
+			return $raw;
 		}
 
-		$prefix = "{$request['field']}_{$request['index']}_";
-		$fields = $this->rows->fields($list, $request['layout']);
-		$row = $this->rows->formatted($list, $request['layout'], $prefix, $post->ID);
-		if (is_wp_error($fields) || is_wp_error($row)) {
-			return is_wp_error($fields) ? $fields : $row;
-		}
-		$this->virtual->add($prefix, $fields);
-
+		$raw = $this->withSettings($row, $raw, (array) $request['values']);
+		$values = $this->rows->format($row->list, $row->layout, $raw, $row->prefix, $row->post->ID);
 		$html = $this->render($request['template'], [
-			'post' => Timber::get_post($post->ID),
-			'row' => $row,
-			'block' => $row,
-			'field_prefix' => $prefix,
+			'post' => Timber::get_post($row->post->ID),
+			'row' => $values,
+			'block' => $values,
+			'field_prefix' => $row->prefix,
 			'index' => (int) $request['index'],
 		]);
 		$this->virtual->clear();
@@ -75,34 +66,22 @@ final class PreviewController
 	}
 
 	/**
-	 * The list's ACF field, named as it is on the page (which may be inside a row that's also new).
+	 * Settings changed in the editor but not saved yet, cleaned as they would be on save.
 	 */
-	private function listField(string $key, string $name): ?array
+	private function withSettings(RowRequest $row, array $raw, array $values): array
 	{
-		$field = acf_get_field($key);
-		if (!$field || !in_array($field['type'], Resolver::LIST_TYPES, true)) {
-			return null;
-		}
-		$field['name'] = $name;
-
-		return $field;
-	}
-
-	/**
-	 * Unsaved rows the new row sits in, outermost first, so its fields resolve as theirs would.
-	 */
-	private function addParents(array $parents): bool
-	{
-		foreach ($parents as $parent) {
-			$field = $this->listField($parent['key'], 'parent');
-			$fields = $field ? $this->rows->fields($field, $parent['layout']) : null;
-			if (!is_array($fields)) {
-				return false;
+		foreach ($row->fields as $sub) {
+			if (!array_key_exists($sub['name'], $values) || !is_string($values[$sub['name']])) {
+				continue;
 			}
-			$this->virtual->add($parent['prefix'], $fields);
+			$field = $this->resolver->field($row->post->ID, $row->prefix . $sub['name'], Resolver::SETTING_TYPES);
+			$value = is_wp_error($field) ? $field : Sanitizer::clean($field, $values[$sub['name']]);
+			if (!is_wp_error($value)) {
+				$raw[$sub['key']] = $value;
+			}
 		}
 
-		return true;
+		return $raw;
 	}
 
 	/**

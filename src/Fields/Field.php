@@ -25,6 +25,12 @@ final class Field implements Versioned
 		return $this->type === 'title';
 	}
 
+	/** Edited in a block's settings panel rather than on the page. */
+	public function isSetting(): bool
+	{
+		return in_array($this->type, Resolver::SETTING_TYPES, true);
+	}
+
 	public function label(): string
 	{
 		return $this->isTitle() ? __('Title') : (string) $this->acf['label'];
@@ -58,6 +64,10 @@ final class Field implements Versioned
 
 		if ($this->acf && (!empty($this->acf['readonly']) || !empty($this->acf['disabled']))) {
 			return $locked('readonly');
+		}
+
+		if ($this->isSetting()) {
+			return ['kind' => 'setting', 'source' => '', 'reason' => ''];
 		}
 
 		if ($this->type === 'image') {
@@ -145,6 +155,10 @@ final class Field implements Versioned
 	 */
 	public function saved(): array
 	{
+		if ($this->isSetting()) {
+			return ['kind' => 'setting', 'value' => SettingControl::value($this), 'base' => $this->fingerprint()];
+		}
+
 		$state = $this->state();
 
 		return [
@@ -158,7 +172,7 @@ final class Field implements Versioned
 	/**
 	 * Clean a submitted value for this field, and check it the way the admin would.
 	 */
-	public function prepare(string $value): string|int|WP_Error
+	public function prepare(string $value): mixed
 	{
 		if ($this->isLocked()) {
 			return new WP_Error('sd_inline_edit_locked', __('This field can only be edited in the admin.'), ['status' => 400]);
@@ -182,7 +196,7 @@ final class Field implements Versioned
 	/**
 	 * Store an ACF value. Titles are written with the post (see Posts\PostUpdater).
 	 */
-	public function write(string|int $value): void
+	public function write(mixed $value): void
 	{
 		if (!$this->isTitle()) {
 			acf_update_value($value, $this->postId, $this->acf);

@@ -13,7 +13,23 @@ use WP_Post;
  */
 final class Resolver
 {
+	/** Fields edited right on the page, marked with `editable()`. */
 	public const FIELD_TYPES = ['text', 'textarea', 'wysiwyg', 'image'];
+
+	/** Fields edited in a block's settings panel, as they have nothing to click on the page. */
+	public const SETTING_TYPES = [
+		'true_false',
+		'select',
+		'radio',
+		'button_group',
+		'number',
+		'range',
+		'url',
+		'email',
+		'link',
+		'color_picker',
+	];
+
 	public const LIST_TYPES = ['flexible_content', 'repeater'];
 
 	private const NAME = '/^[A-Za-z0-9_-]{1,190}$/D';
@@ -41,7 +57,10 @@ final class Resolver
 		return null;
 	}
 
-	public function field(int|string|null $target, string $name): Field|WP_Error
+	/**
+	 * @param string[] $types The field types allowed (FIELD_TYPES unless it's for settings).
+	 */
+	public function field(int|string|null $target, string $name, array $types = self::FIELD_TYPES): Field|WP_Error
 	{
 		$invalid = new WP_Error('sd_inline_edit_field', __('This field can’t be edited here.'), ['status' => 400]);
 		if ($target === null || !preg_match(self::NAME, $name)) {
@@ -49,7 +68,7 @@ final class Resolver
 		}
 
 		if ($target === 'options') {
-			$acf = $this->acf($name, 'options', self::FIELD_TYPES);
+			$acf = $this->acf($name, 'options', $types);
 			if (!$acf) {
 				return $invalid;
 			}
@@ -74,7 +93,7 @@ final class Resolver
 				: $invalid;
 		}
 
-		$acf = $this->acf($name, $post->ID, self::FIELD_TYPES);
+		$acf = $this->acf($name, $post->ID, $types);
 
 		return $acf ? new Field($post->ID, $name, $acf['type'], $acf, $edit_url) : $invalid;
 	}
@@ -144,7 +163,7 @@ final class Resolver
 			$field = $field && $field['name'] === $name ? $field : null;
 		}
 
-		if (!$field || !in_array($field['type'], $types, true)) {
+		if (!$field || !in_array($field['type'], $types, true) || !empty($field['multiple'])) {
 			return null;
 		}
 

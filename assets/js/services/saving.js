@@ -15,8 +15,8 @@ import { reloadEditing } from './session'
  * nothing changed since and then write it in its new place.
  */
 export async function save() {
-	const { lists, fields } = pendingChanges()
-	if (!editing.value || saving.value || busy.value || (!lists.length && !fields.length)) {
+	const { lists, fields, settings, count } = pendingChanges()
+	if (!editing.value || saving.value || busy.value || !count) {
 		return
 	}
 
@@ -40,13 +40,22 @@ export async function save() {
 		base: region.original === null ? undefined : region.base,
 		value: values.get(region),
 	}))
+	const settingChanges = settings.map(setting => ({
+		id: setting.id,
+		post: setting.post,
+		field: savedName(setting.field, setting.row),
+		original: setting.original,
+		base: setting.original === null ? undefined : setting.base,
+		value: setting.serialize(),
+	}))
 
 	try {
-		const result = await post(config.endpoint, { lists: listChanges, changes: fieldChanges })
+		const result = await post(config.endpoint, { lists: listChanges, changes: [...fieldChanges, ...settingChanges] })
 
 		for (const item of result.saved) {
 			const region = regions.find(candidate => candidate.id === item.id)
 			region?.markSaved(item, values.get(region))
+			settings.find(setting => setting.id === item.id)?.markSaved(item)
 		}
 		if (config.page) {
 			config.page.modified = new Date().toISOString()

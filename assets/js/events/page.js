@@ -9,6 +9,7 @@ import {
 	menuOpen,
 	picker,
 	saving,
+	settingsFor,
 	viewport,
 } from '../state/signals'
 import { pending } from '../services/changes'
@@ -118,6 +119,7 @@ function onClick(event, fieldAt, fromEditor) {
 		return
 	}
 	menuOpen.value = false
+	settingsFor.value = null
 	// Dropdowns close on a click elsewhere; the link field stays open until it's done with.
 	if (formatPanel.value !== 'link') {
 		formatPanel.value = ''

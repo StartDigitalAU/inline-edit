@@ -19,6 +19,7 @@ export class RowList {
 		this.label = data.label
 		this.item = data.item
 		this.layouts = data.layouts
+		this.fields = data.fields
 		this.min = data.min
 		this.max = data.max
 		this.base = data.base
@@ -57,6 +58,11 @@ export class RowList {
 
 	layout(name) {
 		return this.layouts.find(layout => layout.name === name) || null
+	}
+
+	/** The fields a row has: its layout's, or the repeater's. */
+	fieldsOf(row) {
+		return (this.isFlexible ? this.layout(rowInfo(row).layout)?.fields : this.fields) || []
 	}
 
 	/** "Text with Image", or "Card 2". */

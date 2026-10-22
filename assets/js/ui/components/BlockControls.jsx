@@ -1,7 +1,8 @@
 import { useState } from 'preact/hooks'
 import { deleteRow, duplicateRow, moveRow } from '../../services/blocks'
 import { startDrag } from '../../services/drag'
-import { busy, dragging, editing, hoveredRow, picker, revision, saving } from '../../state/signals'
+import { hasSettings } from '../../services/settings'
+import { busy, dragging, editing, hoveredRow, picker, revision, saving, settingsFor } from '../../state/signals'
 import { clamp, useFloating } from '../hooks/useFloating'
 import { Button } from './Button'
 import { Icon } from './Icon'
@@ -13,7 +14,8 @@ const INSET = 10
  * delete it, and buttons on its edges to add one before or after it.
  */
 export function BlockControls() {
-	const hovered = hoveredRow.value
+	// While a block's settings are open, its controls stay put.
+	const hovered = settingsFor.value || hoveredRow.value
 	revision.value
 	if (!editing.value || !hovered?.row.isConnected || busy.value || saving.value || picker.value || dragging.value) {
 		return null
@@ -116,6 +118,17 @@ function Toolbar({ list, row, horizontal }) {
 			>
 				<Icon name="down" class={horizontal ? '-rotate-90' : ''} />
 			</Button>
+			{hasSettings(list, row) && (
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					tip="Settings"
+					aria-expanded={settingsFor.value?.row === row ? 'true' : 'false'}
+					onClick={() => (settingsFor.value = settingsFor.value?.row === row ? null : { list, row })}
+				>
+					<Icon name="settings" />
+				</Button>
+			)}
 			<Button variant="ghost" size="icon-sm" tip="Duplicate" disabled={!list.canDuplicate(row)} onClick={() => duplicateRow(list, row)}>
 				<Icon name="copy" />
 			</Button>

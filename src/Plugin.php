@@ -11,6 +11,7 @@ use TheStart\InlineEdit\Posts\PostUpdater;
 use TheStart\InlineEdit\Rest\PreviewController;
 use TheStart\InlineEdit\Rest\Routes;
 use TheStart\InlineEdit\Rest\SaveController;
+use TheStart\InlineEdit\Rest\SettingsController;
 use TheStart\InlineEdit\Rows\RowFactory;
 use TheStart\InlineEdit\Rows\TemplateSigner;
 
@@ -59,6 +60,7 @@ final class Plugin
 		$routes = new Routes(
 			new SaveController($resolver, new PostUpdater()),
 			new PreviewController($resolver, $virtual, $rows, $signer, $registry, $access),
+			new SettingsController($resolver, $virtual, $rows),
 		);
 
 		add_filter('timber/twig/functions', [$twig, 'register']);

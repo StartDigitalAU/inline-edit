@@ -47,21 +47,17 @@ final class RowFactory
 	}
 
 	/**
-	 * A new row as templates see it: values by field name, formatted as ACF would.
+	 * A row as templates see it: values by field name, formatted as ACF would, from raw values by key.
 	 */
-	public function formatted(array $list, string $layout, string $prefix, int $post_id): array|WP_Error
+	public function format(array $list, string $layout, array $raw, string $prefix, int $post_id): array
 	{
 		$fields = $this->fields($list, $layout);
-		$raw = $this->create($list, $layout);
-		if (is_wp_error($fields) || is_wp_error($raw)) {
-			return is_wp_error($fields) ? $fields : $raw;
-		}
-
 		$row = $list['type'] === 'flexible_content' ? ['acf_fc_layout' => $layout] : [];
-		foreach ($fields as $sub) {
+
+		foreach (is_wp_error($fields) ? [] : $fields as $sub) {
 			$name = $sub['name'];
 			$sub['name'] = $prefix . $name;
-			$row[$name] = acf_format_value($raw[$sub['key']], $post_id, $sub);
+			$row[$name] = acf_format_value($raw[$sub['key']] ?? null, $post_id, $sub);
 		}
 
 		return $row;

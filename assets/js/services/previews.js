@@ -33,16 +33,58 @@ export function takePreview(list, layout) {
 async function fetchPreview(list, layout) {
 	const index = temporaryIndex()
 	const preview = await post(config.previewEndpoint, {
+		...listRequest(list),
+		layout,
+		index,
+		stored: false,
+	})
+	return { preview, index }
+}
+
+/**
+ * Render an existing row again, e.g. with changed settings (`values`, by sub field name).
+ */
+export function renderRow(list, row, values) {
+	return post(config.previewEndpoint, { ...rowRequest(list, row), values })
+}
+
+/**
+ * How the server finds a row: its list, layout, index, and whether it's saved yet.
+ */
+export function rowRequest(list, row) {
+	const info = rowInfo(row)
+	return {
+		...listRequest(list),
+		layout: info.layout,
+		index: info.index,
+		stored: isStored(list, row),
+	}
+}
+
+/** Whether a row is saved: one loaded with the page, or a copy of one (which has its values). */
+export function isStored(list, row) {
+	return list.original !== null && 'from' in rowInfo(row).origin
+}
+
+/** The element a row template printed (it must print exactly one). */
+export function toElement(html) {
+	const template = document.createElement('template')
+	template.innerHTML = html.trim()
+	if (template.content.children.length !== 1) {
+		throw new Error('The row template has to print exactly one element.')
+	}
+	return template.content.firstElementChild
+}
+
+function listRequest(list) {
+	return {
 		post: list.post,
 		field: list.field,
 		key: list.key,
 		template: list.template,
 		signature: list.signature,
-		layout,
-		index,
 		parents: unsavedParents(list),
-	})
-	return { preview, index }
+	}
 }
 
 /**

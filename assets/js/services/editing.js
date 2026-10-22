@@ -12,6 +12,7 @@ import {
 	picker,
 	touch,
 	lastDeleted,
+	settingsFor,
 	dragging,
 } from '../state/signals'
 import { clearStatus } from '../state/status'
@@ -110,6 +111,7 @@ function closeEverything() {
 	menuOpen.value = false
 	picker.value = null
 	lastDeleted.value = null
+	settingsFor.value = null
 	dragging.value = null
 	formatPanel.value = ''
 }

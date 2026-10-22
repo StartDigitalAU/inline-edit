@@ -7,6 +7,7 @@ import { DraftsToast } from './components/DraftsToast'
 import { FieldLabel } from './components/FieldLabel'
 import { FormatBar } from './components/FormatBar'
 import { LockedTip } from './components/LockedTip'
+import { SettingsPanel } from './components/settings/SettingsPanel'
 import { ShortcutsSheet } from './components/ShortcutsSheet'
 import { Tooltip } from './components/Tooltip'
 import { UndoToast } from './components/UndoToast'
@@ -24,6 +25,7 @@ export function App({ root }) {
 			<FieldLabel />
 			<BlockControls />
 			<LockedTip />
+			<SettingsPanel />
 			<FormatBar />
 			<DraftsToast />
 			<UndoToast />

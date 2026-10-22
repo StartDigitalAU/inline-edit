@@ -1,4 +1,4 @@
-import { lists, regions, register } from '../model/page'
+import { lists, regions, register, settings } from '../model/page'
 import { rowInfo, setRowInfo } from '../model/rows'
 import { busy, editing, hoveredRow, lastDeleted, touch } from '../state/signals'
 import { clearStatus, setStatus } from '../state/status'
@@ -6,7 +6,7 @@ import { describeError } from './api'
 import { clearDrafts } from './drafts'
 import { record } from './history'
 import { animate } from './motion'
-import { takePreview } from './previews'
+import { takePreview, toElement } from './previews'
 
 /**
  * Adding, moving, duplicating and deleting rows. Each changes the page straight away, animated and
@@ -141,6 +141,9 @@ function copyRow(row) {
 			const elements = region.elements.filter(el => row.contains(el)).map(el => counterpart.get(el))
 			regions.push(region.copyTo(elements))
 		})
+	settings
+		.filter(setting => row.contains(setting.row))
+		.forEach(setting => settings.push(setting.copyTo(counterpart.get(setting.row))))
 
 	return copy
 }
@@ -154,15 +157,6 @@ function createPlaceholder(list, label) {
 		placeholder.style.minHeight = `${list.rows()[0].offsetHeight}px`
 	}
 	return placeholder
-}
-
-function toElement(html) {
-	const template = document.createElement('template')
-	template.innerHTML = html.trim()
-	if (template.content.children.length !== 1) {
-		throw new Error('The row template has to print exactly one element.')
-	}
-	return template.content.firstElementChild
 }
 
 /**

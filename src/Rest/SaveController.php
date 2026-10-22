@@ -27,6 +27,9 @@ use WP_REST_Request;
  */
 final class SaveController
 {
+	/** Fields on the page and in blocks' settings panels. */
+	private const FIELD_TYPES = [...Resolver::FIELD_TYPES, ...Resolver::SETTING_TYPES];
+
 	public function __construct(
 		private Resolver $resolver,
 		private PostUpdater $updater,
@@ -91,7 +94,7 @@ final class SaveController
 	{
 		$checks = [
 			[$lists, fn($post, $name) => $this->resolver->list($post, $name)],
-			[$changes, fn($post, $name) => $this->resolver->field($post, $name)],
+			[$changes, fn($post, $name) => $this->resolver->field($post, $name, self::FIELD_TYPES)],
 		];
 
 		foreach ($checks as [$items, $resolve]) {
@@ -138,13 +141,13 @@ final class SaveController
 	/**
 	 * Each change's field (under its new name) and cleaned value.
 	 *
-	 * @return array<int, array{id: string, field: Field, value: string|int}>
+	 * @return array<int, array{id: string, field: Field, value: mixed}>
 	 */
 	private function prepare(array $changes, SaveErrors $errors): array
 	{
 		$prepared = [];
 		foreach ($changes as $item) {
-			$field = $this->resolver->field($this->resolver->target($item['post']), $item['field']);
+			$field = $this->resolver->field($this->resolver->target($item['post']), $item['field'], self::FIELD_TYPES);
 			$value = is_wp_error($field) ? $field : $field->prepare($item['value']);
 			if (is_wp_error($value)) {
 				$errors->add($item['id'], $value);

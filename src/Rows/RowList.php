@@ -53,10 +53,7 @@ final class RowList implements Versioned
 				'name' => $layout['name'],
 				'label' => $layout['label'],
 				'max' => (int) ($layout['max'] ?? 0),
-				'fields' => array_map(
-					fn($sub) => ['label' => $sub['label'], 'type' => $sub['type']],
-					$layout['sub_fields'] ?? [],
-				),
+				'fields' => $this->summary($layout['sub_fields'] ?? []),
 			],
 			$this->isFlexible() ? array_values($this->acf['layouts']) : [],
 		);
@@ -69,6 +66,8 @@ final class RowList implements Versioned
 			'label' => $this->acf['label'],
 			'item' => $this->itemName(),
 			'layouts' => $layouts,
+			// A repeater's rows all have the same fields.
+			'fields' => $this->isFlexible() ? [] : $this->summary($this->acf['sub_fields'] ?? []),
 			'rows' => $this->structure(),
 			'min' => (int) ($this->acf['min'] ?? 0),
 			'max' => (int) ($this->acf['max'] ?? 0),
@@ -76,6 +75,14 @@ final class RowList implements Versioned
 			'template' => $template,
 			'signature' => $signature,
 		];
+	}
+
+	/**
+	 * Each sub field's label and type, so the editor knows what a row holds.
+	 */
+	private function summary(array $sub_fields): array
+	{
+		return array_map(fn($sub) => ['label' => $sub['label'], 'type' => $sub['type']], $sub_fields);
 	}
 
 	/**

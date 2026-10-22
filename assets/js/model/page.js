@@ -8,13 +8,18 @@ import { rowInfo, setRowInfo } from './rows'
  */
 export const regions = []
 export const lists = []
+/** Settings of rows, loaded when a block's settings panel first opens. */
+export const settings = []
 
 /**
  * Pick up what the server marked as editable inside `root`: elements with `data-sd-edit` and
- * `data-sd-rows`, whose values index into `data.regions` and `data.lists`.
+ * `data-sd-rows`, whose values index into `data.regions` and `data.lists`. Anything inside `except`
+ * is already known (e.g. a list carried over from a re-rendered row) and left alone.
  */
-export function register(root, data, { isNew = false } = {}) {
-	const found = selector => [...(root.matches?.(selector) ? [root] : []), ...root.querySelectorAll(selector)]
+export function register(root, data, { isNew = false, except = [] } = {}) {
+	const known = el => except.some(other => other.contains(el))
+	const found = selector =>
+		[...(root.matches?.(selector) ? [root] : []), ...root.querySelectorAll(selector)].filter(el => !known(el))
 	const added = { regions: [], lists: [] }
 
 	for (const el of found('[data-sd-rows]')) {
@@ -65,6 +70,7 @@ export function forget(root) {
 	const inside = el => root === el || root.contains(el)
 	remove(regions, region => region.elements.some(inside))
 	remove(lists, list => inside(list.el))
+	remove(settings, setting => inside(setting.row))
 }
 
 function remove(items, shouldRemove) {
@@ -105,6 +111,8 @@ export function rowsAround(el) {
 }
 
 export const liveRegions = () => regions.filter(region => region.isConnected)
+export const liveSettings = () => settings.filter(setting => setting.isConnected)
+export const settingsOf = row => settings.filter(setting => setting.row === row)
 export const liveLists = () => lists.filter(list => list.isConnected)
 
 /**

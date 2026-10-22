@@ -2,6 +2,7 @@
 
 namespace TheStart\InlineEdit\Page;
 
+use TheStart\InlineEdit\Fields\Resolver;
 use TheStart\InlineEdit\Plugin;
 use WP_Post;
 
@@ -44,6 +45,7 @@ final class Assets
 		return [
 			'endpoint' => rest_url(Plugin::REST_NAMESPACE . '/save'),
 			'previewEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/preview'),
+			'settingsEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/settings'),
 			'restRoot' => rest_url(),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'nonceEndpoint' => admin_url('admin-ajax.php?action=rest-nonce'),
@@ -54,6 +56,8 @@ final class Assets
 			'lists' => $this->registry->lists(),
 			'page' => $this->page(),
 			'styleFormats' => StyleFormats::all(),
+			// Field types edited in a block's settings panel.
+			'settingTypes' => Resolver::SETTING_TYPES,
 		];
 	}
 

@@ -18,6 +18,7 @@ final class Routes
 	public function __construct(
 		private SaveController $save,
 		private PreviewController $preview,
+		private SettingsController $settings,
 	) {}
 
 	public function register(): void
@@ -63,25 +64,49 @@ final class Routes
 			'methods' => WP_REST_Server::CREATABLE,
 			'callback' => [$this->preview, 'handle'],
 			'permission_callback' => $canEdit,
-			'args' => [
-				'post' => $this->post(),
-				'field' => $this->name(true),
-				'key' => $this->fieldKey(),
+			'args' => $this->row() + [
 				'template' => ['type' => 'string', 'required' => true, 'maxLength' => 190],
 				'signature' => $this->fingerprint(true),
-				'layout' => $this->layout(),
-				'index' => ['type' => 'integer', 'required' => true, 'minimum' => 0],
-				// Unsaved rows this one sits in, so a card can be added to a block that's also new.
-				'parents' => $this->listOf(
-					[
-						'key' => $this->fieldKey(),
-						'prefix' => ['type' => 'string', 'required' => true, 'pattern' => '^[A-Za-z0-9_-]{1,190}_$'],
-						'layout' => $this->layout(),
-					],
-					20,
-				),
+				// Settings changed in the editor, by sub field name.
+				'values' => [
+					'type' => 'object',
+					'default' => [],
+					'additionalProperties' => ['type' => 'string', 'maxLength' => 2000],
+				],
 			],
 		]);
+
+		register_rest_route(Plugin::REST_NAMESPACE, '/settings', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->settings, 'handle'],
+			'permission_callback' => $canEdit,
+			'args' => $this->row(),
+		]);
+	}
+
+	/**
+	 * One row, as the editor names it (see RowRequest).
+	 */
+	private function row(): array
+	{
+		return [
+			'post' => $this->post(),
+			'field' => $this->name(true),
+			'key' => $this->fieldKey(),
+			'layout' => $this->layout(),
+			'index' => ['type' => 'integer', 'required' => true, 'minimum' => 0],
+			// Whether the row is saved (or only exists in the editor so far).
+			'stored' => ['type' => 'boolean', 'default' => false],
+			// Unsaved rows this one sits in, so a card can be added to a block that's also new.
+			'parents' => $this->listOf(
+				[
+					'key' => $this->fieldKey(),
+					'prefix' => ['type' => 'string', 'required' => true, 'pattern' => '^[A-Za-z0-9_-]{1,190}_$'],
+					'layout' => $this->layout(),
+				],
+				20,
+			),
+		];
 	}
 
 	private function listOf(array $properties, int $max = self::MAX_ITEMS): array

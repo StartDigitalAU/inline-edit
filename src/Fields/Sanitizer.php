@@ -9,7 +9,7 @@ use WP_Error;
  */
 final class Sanitizer
 {
-	public static function clean(Field $field, string $value): string|int|WP_Error
+	public static function clean(Field $field, string $value): mixed
 	{
 		if (!wp_check_invalid_utf8($value)) {
 			return new WP_Error('sd_inline_edit_invalid', __('This value isn’t valid.'), ['status' => 400]);
@@ -20,11 +20,89 @@ final class Sanitizer
 		$value = preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $value);
 
 		return match ($field->type) {
+			'true_false' => in_array($value, ['1', 'true'], true) ? 1 : 0,
+			'select', 'radio', 'button_group' => self::choice($field, $value),
+			'number', 'range' => self::number($field, trim($value)),
+			'url' => self::url(trim($value)),
+			'email' => self::email(trim($value)),
+			'color_picker' => self::color(trim($value)),
+			'link' => self::link($value),
 			'image' => self::image($field, trim($value)),
 			'wysiwyg' => self::html(trim($value)),
 			'textarea' => self::text(trim($value)),
 			default => self::text(trim(preg_replace('/\s*\n\s*/', ' ', $value))),
 		};
+	}
+
+	private static function choice(Field $field, string $value): string|WP_Error
+	{
+		$choices = array_map('strval', array_keys((array) ($field->acf['choices'] ?? [])));
+		if (in_array($value, $choices, true) || ($value === '' && !empty($field->acf['allow_null']))) {
+			return $value;
+		}
+
+		return self::invalid(__('Choose one of the options.'));
+	}
+
+	private static function number(Field $field, string $value): string|WP_Error
+	{
+		if ($value === '') {
+			return '';
+		}
+		if (!is_numeric($value)) {
+			return self::invalid(__('Enter a number.'));
+		}
+		$min = $field->acf['min'] ?? '';
+		$max = $field->acf['max'] ?? '';
+		if ((is_numeric($min) && $value < $min) || (is_numeric($max) && $value > $max)) {
+			/* translators: 1: minimum, 2: maximum */
+			return self::invalid(sprintf(__('Enter a number from %1$s to %2$s.'), $min, $max));
+		}
+
+		return $value;
+	}
+
+	private static function url(string $value): string|WP_Error
+	{
+		$url = esc_url_raw($value);
+
+		return $value === '' || $url !== '' ? $url : self::invalid(__('Enter a valid link.'));
+	}
+
+	private static function email(string $value): string|WP_Error
+	{
+		return $value === '' || is_email($value) ? sanitize_email($value) : self::invalid(__('Enter a valid email address.'));
+	}
+
+	private static function color(string $value): string|WP_Error
+	{
+		return $value === '' || sanitize_hex_color($value) ? $value : self::invalid(__('Choose a colour.'));
+	}
+
+	/**
+	 * A link arrives as JSON ({ url, title, target }), or empty to clear it.
+	 */
+	private static function link(string $value): array|string|WP_Error
+	{
+		$link = json_decode($value, true);
+		if ($value === '' || $link === null) {
+			return '';
+		}
+		$url = is_array($link) ? esc_url_raw((string) ($link['url'] ?? '')) : '';
+		if ($url === '') {
+			return self::invalid(__('Enter a valid link.'));
+		}
+
+		return [
+			'url' => $url,
+			'title' => sanitize_text_field((string) ($link['title'] ?? '')),
+			'target' => ($link['target'] ?? '') === '_blank' ? '_blank' : '',
+		];
+	}
+
+	private static function invalid(string $message): WP_Error
+	{
+		return new WP_Error('sd_inline_edit_invalid', $message, ['status' => 400]);
 	}
 
 	private static function html(string $value): string

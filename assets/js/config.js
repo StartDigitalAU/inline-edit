@@ -21,6 +21,9 @@ export const BLOCKS = [
 // The site's TinyMCE "Formats", so the admin and front-end editors offer the same styles.
 export const STYLE_FORMATS = Array.isArray(config?.styleFormats) ? config.styleFormats : []
 
+// Field types edited in a block's settings panel rather than on the page (see src/Fields/Resolver.php).
+export const SETTING_TYPES = Array.isArray(config?.settingTypes) ? config.settingTypes : []
+
 export const LOCKED_REASONS = {
 	html: 'This text has formatting that can only be changed in the admin.',
 	readonly: 'This field is read-only.',
