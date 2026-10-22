@@ -2,12 +2,29 @@ import { isHttpUrl } from '../model/images'
 import { mediaOpen } from '../state/signals'
 import { setStatus } from '../state/status'
 import { fieldChanged } from './fields'
+import { record } from './history'
 
 /**
  * Picking an image field's image from the WordPress media library.
  */
 
 const frames = new Map()
+
+/**
+ * Show a new image in a field, undoably.
+ */
+export function replaceImage(region, attachment) {
+	const before = region.imageSnapshot()
+	region.setImage(attachment)
+	fieldChanged(region)
+	const after = region.imageSnapshot()
+
+	const show = ({ value, image }) => {
+		region.showImage(value, image)
+		fieldChanged(region)
+	}
+	record({ label: `Replace ${region.label.toLowerCase()}`, undo: () => show(before), redo: () => show(after) })
+}
 
 export function openMediaLibrary(region, el) {
 	const media = window.wp?.media
@@ -40,8 +57,7 @@ function createFrame(media, region, el) {
 	frame.on('select', () => {
 		const attachment = frame.state().get('selection').first()?.toJSON()
 		if (attachment?.id && isHttpUrl(attachment.url)) {
-			region.setImage(attachment)
-			fieldChanged(region)
+			replaceImage(region, attachment)
 		}
 	})
 	frame.on('close', () => {

@@ -1,28 +1,29 @@
-import { config } from '../config'
-import { lists, regions, register, rowsAround } from '../model/page'
-import { rowInfo, setRowInfo, temporaryIndex } from '../model/rows'
-import { busy, editing, hoveredRow, touch, undo } from '../state/signals'
+import { lists, regions, register } from '../model/page'
+import { rowInfo, setRowInfo } from '../model/rows'
+import { busy, editing, hoveredRow, lastDeleted, touch } from '../state/signals'
 import { clearStatus, setStatus } from '../state/status'
-import { describeError, post } from './api'
+import { describeError } from './api'
 import { clearDrafts } from './drafts'
+import { record } from './history'
+import { animate } from './motion'
+import { takePreview } from './previews'
 
 /**
- * Adding, moving, duplicating and deleting rows. Each changes the page straight away and is only
- * saved with everything else, so nothing is published until Save.
+ * Adding, moving, duplicating and deleting rows. Each changes the page straight away, animated and
+ * undoable, and is only saved with everything else, so nothing is published until Save.
  */
 
-export function moveRow(list, row, offset) {
-	const rows = list.rows()
-	const target = rows[rows.indexOf(row) + offset]
-	if (!target) {
+export function moveRow(list, row, to) {
+	const from = list.indexOf(row)
+	if (to === from || to < 0 || to >= list.rows().length) {
 		return
 	}
-	if (offset < 0) {
-		target.before(row)
-	} else {
-		target.after(row)
-	}
-	changed(row)
+	record({
+		label: `Move ${list.rowLabel(row)}`,
+		undo: () => place(list, row, from),
+		redo: () => place(list, row, to),
+	})
+	return place(list, row, to)
 }
 
 export function duplicateRow(list, row) {
@@ -30,8 +31,13 @@ export function duplicateRow(list, row) {
 		return
 	}
 	const copy = copyRow(row)
-	row.after(copy)
-	changed(copy)
+	const index = list.indexOf(row) + 1
+	record({
+		label: `Duplicate ${list.rowLabel(row)}`,
+		undo: () => take(list, copy),
+		redo: () => place(list, copy, index),
+	})
+	return place(list, copy, index)
 }
 
 export function deleteRow(list, row) {
@@ -39,22 +45,20 @@ export function deleteRow(list, row) {
 		return
 	}
 	const label = list.rowLabel(row)
-	const next = row.nextElementSibling
-	row.remove()
-	changed()
-
-	undo.value = {
-		label: `${label} deleted`,
-		restore() {
-			list.el.insertBefore(row, next?.parentElement === list.el ? next : null)
-			undo.value = null
-			changed(row)
-		},
+	const index = list.indexOf(row)
+	const change = {
+		label: `Delete ${label}`,
+		undo: () => place(list, row, index),
+		redo: () => take(list, row),
 	}
+	record(change)
+	lastDeleted.value = { label: `${label} deleted`, change }
+	return take(list, row)
 }
 
 /**
- * Add a new row of `layout` at `index`, rendered by the server from the list's row template.
+ * Add a new row of `layout` at `index`. A placeholder shows straight away while the server renders
+ * it (often already done: the block picker fetches previews ahead).
  */
 export async function addRow(list, index, layout = '') {
 	if (busy.value || !list.canAdd()) {
@@ -62,33 +66,32 @@ export async function addRow(list, index, layout = '') {
 	}
 	const label = list.layout(layout)?.label || list.item
 	busy.value = `Adding ${label}…`
-	setStatus('saving', busy.value)
+	const placeholder = createPlaceholder(list, label)
+	await animate(() => list.el.insertBefore(placeholder, list.rows()[index] || null), {
+		rows: list.rows(),
+		added: () => [placeholder],
+	})
 
 	try {
-		const temporary = temporaryIndex()
-		const preview = await post(config.previewEndpoint, {
-			post: list.post,
-			field: list.field,
-			key: list.key,
-			template: list.template,
-			signature: list.signature,
-			layout,
-			index: temporary,
-			parents: unsavedParents(list),
-		})
-
+		const { preview, index: temporary } = await takePreview(list, layout)
 		const row = toElement(preview.html)
-		const rows = list.rows()
-		list.el.insertBefore(row, rows[index] || null)
 		setRowInfo(row, { index: temporary, origin: { layout }, layout })
 
+		await animate(() => placeholder.replaceWith(row), { rows: [placeholder], added: () => [row] })
 		const added = register(row, preview, { isNew: true })
 		if (editing.value) {
 			added.regions.forEach(region => region.activate())
 		}
+		const at = list.indexOf(row)
+		record({
+			label: `Add ${label}`,
+			undo: () => take(list, row),
+			redo: () => place(list, row, at),
+		})
 		clearStatus()
 		changed(row)
 	} catch (error) {
+		placeholder.remove()
 		const { message, link } = describeError(error)
 		setStatus('error', message, link)
 	} finally {
@@ -96,17 +99,22 @@ export async function addRow(list, index, layout = '') {
 	}
 }
 
-/**
- * Rows the list sits in that aren't saved yet, which the server needs to make sense of its name.
- */
-function unsavedParents(list) {
-	return rowsAround(list.el)
-		.filter(({ row }) => 'layout' in rowInfo(row).origin)
-		.map(({ list: parent, row }) => ({
-			key: parent.key,
-			prefix: `${parent.field}_${rowInfo(row).index}_`,
-			layout: rowInfo(row).layout,
-		}))
+/** Put a row at an index in its list (moving it, or putting it back). */
+async function place(list, row, index) {
+	await animate(
+		() => {
+			const others = list.rows().filter(other => other !== row)
+			list.el.insertBefore(row, others[index] || null)
+		},
+		{ rows: [...list.rows(), row] }
+	)
+	changed(row)
+}
+
+/** Take a row off the page. Its fields and lists stay known, for undo. */
+async function take(list, row) {
+	await animate(() => row.remove(), { rows: list.rows() })
+	changed()
 }
 
 /**
@@ -137,6 +145,17 @@ function copyRow(row) {
 	return copy
 }
 
+function createPlaceholder(list, label) {
+	const placeholder = document.createElement('div')
+	placeholder.setAttribute('data-sd-placeholder', `Adding ${label}…`)
+	// In a grid of cards, one card's space rather than the full width.
+	if (list.isHorizontal()) {
+		placeholder.setAttribute('data-sd-placeholder-inline', '')
+		placeholder.style.minHeight = `${list.rows()[0].offsetHeight}px`
+	}
+	return placeholder
+}
+
 function toElement(html) {
 	const template = document.createElement('template')
 	template.innerHTML = html.trim()
@@ -155,7 +174,7 @@ function changed(row = null) {
 	// Block changes can't be restored after a reload, so earlier text drafts would be misleading.
 	clearDrafts()
 	touch()
-	if (row) {
+	if (row?.isConnected) {
 		flash(row)
 	}
 }

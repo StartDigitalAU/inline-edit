@@ -2,6 +2,7 @@ import { useRef } from 'preact/hooks'
 import { MOD } from '../../config'
 import { pending } from '../../services/changes'
 import { discardChanges, toggleEditing } from '../../services/editing'
+import { history, redo, undo } from '../../services/history'
 import { save } from '../../services/saving'
 import { busy, editing, menuOpen, picker, saving } from '../../state/signals'
 import { pageList } from '../pageList'
@@ -35,6 +36,20 @@ function StartButton() {
 	)
 }
 
+function UndoRedo({ disabled }) {
+	const { undo: undoLabel, redo: redoLabel } = history.value
+	return (
+		<div class="flex items-center max-sm:hidden">
+			<Button variant="ghost" size="icon" tip={undoLabel ? `Undo ${undoLabel.toLowerCase()}` : 'Undo'} keys={[MOD, 'Z']} disabled={disabled || !undoLabel} onClick={undo} aria-label="Undo">
+				<Icon name="undo" />
+			</Button>
+			<Button variant="ghost" size="icon" tip={redoLabel ? `Redo ${redoLabel.toLowerCase()}` : 'Redo'} keys={[MOD, '⇧', 'Z']} disabled={disabled || !redoLabel} onClick={redo} aria-label="Redo">
+				<Icon name="redo" />
+			</Button>
+		</div>
+	)
+}
+
 function EditingActions() {
 	const menuButton = useRef(null)
 	const { count } = pending.value
@@ -46,6 +61,7 @@ function EditingActions() {
 			<div class="min-w-0 max-sm:flex-1">
 				<Status />
 			</div>
+			<UndoRedo disabled={locked} />
 			<Separator />
 			{list && (
 				<>

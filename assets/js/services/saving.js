@@ -5,6 +5,7 @@ import { setStatus } from '../state/status'
 import { describeError, post } from './api'
 import { pendingChanges } from './changes'
 import { clearDrafts, saveDrafts } from './drafts'
+import { clearHistory } from './history'
 import { swapInSavedLists } from './refresh'
 import { reloadEditing } from './session'
 
@@ -52,10 +53,14 @@ export async function save() {
 			config.page.modifiedBy = 'you'
 		}
 		// Blocks moved, so field names did too: swap in the saved blocks (or reload if that fails).
-		if (lists.length && !(await swapInSavedLists(lists).catch(() => false))) {
-			clearDrafts()
-			reloadEditing()
-			return
+		if (lists.length) {
+			if (!(await swapInSavedLists(lists).catch(() => false))) {
+				clearDrafts()
+				reloadEditing()
+				return
+			}
+			// Undo can't reach blocks that were swapped out.
+			clearHistory()
 		}
 		saveDrafts()
 		setStatus('saved', 'Saved')

@@ -2,6 +2,7 @@ import { mediaOpen } from '../state/signals'
 import { BlockControls } from './components/BlockControls'
 import { BlockPicker } from './components/BlockPicker'
 import { BottomBar } from './components/BottomBar'
+import { DragLayer } from './components/DragLayer'
 import { DraftsToast } from './components/DraftsToast'
 import { FieldLabel } from './components/FieldLabel'
 import { FormatBar } from './components/FormatBar'
@@ -27,6 +28,7 @@ export function App({ root }) {
 			<DraftsToast />
 			<UndoToast />
 			<BottomBar />
+			<DragLayer />
 			<BlockPicker />
 			<ShortcutsSheet />
 			<Tooltip root={root} />

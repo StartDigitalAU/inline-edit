@@ -11,7 +11,8 @@ import {
 	menuOpen,
 	picker,
 	touch,
-	undo,
+	lastDeleted,
+	dragging,
 } from '../state/signals'
 import { clearStatus } from '../state/status'
 import { changesLabel, pendingChanges } from './changes'
@@ -108,6 +109,7 @@ function closeEverything() {
 	lockedField.value = null
 	menuOpen.value = false
 	picker.value = null
-	undo.value = null
+	lastDeleted.value = null
+	dragging.value = null
 	formatPanel.value = ''
 }

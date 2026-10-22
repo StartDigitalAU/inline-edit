@@ -170,8 +170,17 @@ export class Region {
 	}
 
 	setImage(attachment) {
-		this.value = String(attachment.id)
-		this.elements.forEach(el => applyImage(el, { src: attachment.url, alt: attachment.alt }))
+		this.showImage(String(attachment.id), { src: attachment.url, alt: attachment.alt })
+	}
+
+	/** The image as it is now, to put back with showImage() (undo). */
+	imageSnapshot() {
+		return { value: this.value, image: imageState(this.element) }
+	}
+
+	showImage(value, image) {
+		this.value = value
+		this.elements.forEach(el => applyImage(el, image))
 		this.error = ''
 		this.refresh()
 	}

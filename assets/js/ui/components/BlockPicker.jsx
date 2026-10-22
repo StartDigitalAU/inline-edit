@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import { addRow } from '../../services/blocks'
+import { prefetchPreview } from '../../services/previews'
 import { picker } from '../../state/signals'
 import { Kbd } from './Kbd'
 import { Icon } from './Icon'
@@ -29,6 +30,11 @@ function Picker({ list, index }) {
 
 	useLayoutEffect(() => input.current.focus(), [])
 	useEffect(() => setHighlighted(available[0]?.name), [query])
+	// Start rendering the highlighted block, so it's ready if it's chosen.
+	useEffect(() => {
+		const timer = highlighted && setTimeout(() => prefetchPreview(list, highlighted), 120)
+		return () => clearTimeout(timer)
+	}, [highlighted])
 
 	const close = () => (picker.value = null)
 	const choose = name => {

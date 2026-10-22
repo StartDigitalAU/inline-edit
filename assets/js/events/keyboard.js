@@ -2,6 +2,7 @@ import { BLOCKS } from '../config'
 import { regionFor } from '../model/page'
 import { editing, formatPanel, lockedField, menuOpen, picker, shortcutsOpen } from '../state/signals'
 import { toggleEditing } from '../services/editing'
+import { redo, undo } from '../services/history'
 import { save } from '../services/saving'
 import { restoreSelection, setBlock } from '../services/formatting'
 import { openMediaLibrary } from '../services/media'
@@ -38,6 +39,14 @@ export function listenToKeyboard() {
 		if (mod && event.key.toLowerCase() === 's') {
 			event.preventDefault()
 			save()
+			return
+		}
+
+		// In a text field, the browser's own undo handles typing.
+		if (mod && !isTyping(event) && (event.key.toLowerCase() === 'z' || event.key.toLowerCase() === 'y')) {
+			event.preventDefault()
+			const redoing = event.key.toLowerCase() === 'y' || event.shiftKey
+			redoing ? redo() : undo()
 			return
 		}
 

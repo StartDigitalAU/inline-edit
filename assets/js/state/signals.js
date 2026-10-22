@@ -35,8 +35,10 @@ export const picker = signal(null)
 export const tooltipFor = signal(null)
 /** Unsaved changes found from before a reload: [{ region, draft }]. */
 export const draftsFound = signal(null)
-/** The last deleted row, which can be put back: { label, restore }. */
-export const undo = signal(null)
+/** The last deleted row, offered back in a toast: { label, change } (see services/history.js). */
+export const lastDeleted = signal(null)
+/** Dragging a row to a new place: { list, row, label, index, x, y }. */
+export const dragging = signal(null)
 /** The formatting bar's open panel: '', 'block', 'style' or 'link'. */
 export const formatPanel = signal('')
 /** While the media library is open, the editor's UI steps aside. */

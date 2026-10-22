@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import { deleteRow, duplicateRow, moveRow } from '../../services/blocks'
-import { busy, editing, hoveredRow, picker, revision, saving } from '../../state/signals'
+import { startDrag } from '../../services/drag'
+import { busy, dragging, editing, hoveredRow, picker, revision, saving } from '../../state/signals'
 import { clamp, useFloating } from '../hooks/useFloating'
 import { Button } from './Button'
 import { Icon } from './Icon'
@@ -14,7 +15,7 @@ const INSET = 10
 export function BlockControls() {
 	const hovered = hoveredRow.value
 	revision.value
-	if (!editing.value || !hovered?.row.isConnected || busy.value || saving.value || picker.value) {
+	if (!editing.value || !hovered?.row.isConnected || busy.value || saving.value || picker.value || dragging.value) {
 		return null
 	}
 	return <Controls key={hovered.row} {...hovered} />
@@ -95,16 +96,14 @@ function Toolbar({ list, row, horizontal }) {
 			role="toolbar"
 			aria-label={list.rowLabel(row)}
 		>
-			<span class="max-w-[180px] truncate border-r border-line pl-[7px] pr-2 text-[13px] font-medium">
-				{list.rowLabel(row)}
-			</span>
+			<DragHandle list={list} row={row} />
 			<Button
 				variant="ghost"
 				size="icon-sm"
 				class="ml-1"
 				tip={horizontal ? 'Move left' : 'Move up'}
 				disabled={index === 0}
-				onClick={() => moveRow(list, row, -1)}
+				onClick={() => moveRow(list, row, index - 1)}
 			>
 				<Icon name="up" class={horizontal ? '-rotate-90' : ''} />
 			</Button>
@@ -113,7 +112,7 @@ function Toolbar({ list, row, horizontal }) {
 				size="icon-sm"
 				tip={horizontal ? 'Move right' : 'Move down'}
 				disabled={index === last}
-				onClick={() => moveRow(list, row, 1)}
+				onClick={() => moveRow(list, row, index + 1)}
 			>
 				<Icon name="down" class={horizontal ? '-rotate-90' : ''} />
 			</Button>
@@ -130,6 +129,23 @@ function Toolbar({ list, row, horizontal }) {
 				<Icon name="trash" />
 			</Button>
 		</div>
+	)
+}
+
+/**
+ * The block's name, which is also what you drag it by.
+ */
+function DragHandle({ list, row }) {
+	const movable = list.rows().length > 1
+	return (
+		<span
+			class={`flex h-7 max-w-[200px] select-none items-center gap-1 rounded-[7px] border-r border-line pl-1 pr-2 text-[13px] font-medium ${movable ? 'cursor-grab hover:bg-hover active:cursor-grabbing' : ''}`}
+			data-tip={movable ? 'Drag to move' : undefined}
+			onPointerDown={event => movable && startDrag(list, row, event)}
+		>
+			{movable && <Icon name="grip" class="text-muted" />}
+			<span class="truncate">{list.rowLabel(row)}</span>
+		</span>
 	)
 }
 

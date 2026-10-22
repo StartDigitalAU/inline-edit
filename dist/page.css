@@ -154,3 +154,46 @@
 ::view-transition-new(sd-inline-edit) {
 	animation: none;
 }
+
+/* The row being dragged stays in place, faded, until it's dropped. */
+.sd-inline-editing [data-sd-dragging] {
+	opacity: 0.35;
+	transition: opacity 0.15s ease;
+}
+
+/* A new block, shown straight away while the server renders it. */
+[data-sd-placeholder] {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 220px;
+	margin: 24px auto;
+	width: min(100% - 32px, 1120px);
+	border-radius: 12px;
+	background: linear-gradient(100deg, rgb(128 128 128 / 0.08) 30%, rgb(128 128 128 / 0.16) 50%, rgb(128 128 128 / 0.08) 70%);
+	background-size: 300% 100%;
+	animation: sd-shimmer 1.4s ease-in-out infinite;
+}
+
+[data-sd-placeholder]::before {
+	content: attr(data-sd-placeholder);
+	color: rgb(128 128 128);
+	font: 500 14px/1.4 Geist, system-ui, -apple-system, "Segoe UI", sans-serif;
+	letter-spacing: -0.006em;
+}
+
+@keyframes sd-shimmer {
+	from {
+		background-position: 100% 0;
+	}
+	to {
+		background-position: 0 0;
+	}
+}
+
+[data-sd-placeholder][data-sd-placeholder-inline] {
+	grid-column: auto;
+	width: auto;
+	margin: 0;
+}

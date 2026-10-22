@@ -46,7 +46,9 @@ export class RowList {
 	}
 
 	rows() {
-		return [...this.el.children].filter(el => !/^(SCRIPT|STYLE|TEMPLATE)$/.test(el.nodeName))
+		return [...this.el.children].filter(
+			el => !/^(SCRIPT|STYLE|TEMPLATE)$/.test(el.nodeName) && !el.hasAttribute('data-sd-placeholder')
+		)
 	}
 
 	indexOf(row) {
