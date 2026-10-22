@@ -5,6 +5,7 @@ import { setStatus } from '../state/status'
 import { describeError, post } from './api'
 import { pendingChanges } from './changes'
 import { clearDrafts, saveDrafts } from './drafts'
+import { swapInSavedLists } from './refresh'
 import { reloadEditing } from './session'
 
 /**
@@ -42,13 +43,6 @@ export async function save() {
 	try {
 		const result = await post(config.endpoint, { lists: listChanges, changes: fieldChanges })
 
-		// Blocks moved, so field names did too; reload to pick up the saved page.
-		if (lists.length) {
-			clearDrafts()
-			reloadEditing()
-			return
-		}
-
 		for (const item of result.saved) {
 			const region = regions.find(candidate => candidate.id === item.id)
 			region?.markSaved(item, values.get(region))
@@ -56,6 +50,12 @@ export async function save() {
 		if (config.page) {
 			config.page.modified = new Date().toISOString()
 			config.page.modifiedBy = 'you'
+		}
+		// Blocks moved, so field names did too: swap in the saved blocks (or reload if that fails).
+		if (lists.length && !(await swapInSavedLists(lists).catch(() => false))) {
+			clearDrafts()
+			reloadEditing()
+			return
 		}
 		saveDrafts()
 		setStatus('saved', 'Saved')

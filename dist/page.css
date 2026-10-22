@@ -132,3 +132,25 @@
 		animation-duration: 0.01ms;
 	}
 }
+
+/* Block changes animate with view transitions (see services/motion.js): only the blocks move. */
+::view-transition-group(*) {
+	animation-duration: 0.3s;
+	animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+}
+
+/* The editor's own UI stays put rather than cross-fading with the page. */
+#sd-inline-edit {
+	view-transition-name: sd-inline-edit;
+}
+
+::view-transition-group(sd-inline-edit),
+::view-transition-old(sd-inline-edit),
+::view-transition-new(sd-inline-edit) {
+	animation: none;
+}

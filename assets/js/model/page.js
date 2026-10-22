@@ -58,6 +58,23 @@ function rowsLineUp(list, details) {
 	return false
 }
 
+/**
+ * Stop tracking the fields and lists inside `root` (and `root` itself), e.g. before it's replaced.
+ */
+export function forget(root) {
+	const inside = el => root === el || root.contains(el)
+	remove(regions, region => region.elements.some(inside))
+	remove(lists, list => inside(list.el))
+}
+
+function remove(items, shouldRemove) {
+	for (let i = items.length - 1; i >= 0; i--) {
+		if (shouldRemove(items[i])) {
+			items.splice(i, 1)
+		}
+	}
+}
+
 export function regionFor(target) {
 	const el = target instanceof Element ? target.closest('[data-sd-edit]') : null
 	return el ? regions.find(region => region.elements.includes(el)) || null : null
