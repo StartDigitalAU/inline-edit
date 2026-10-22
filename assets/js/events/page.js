@@ -14,6 +14,7 @@ import {
 	viewport,
 } from '../state/signals'
 import { pending } from '../services/changes'
+import { draftPending } from '../services/drafts'
 import { fieldChanged, pasteText } from '../services/fields'
 import { forgetSelection, rememberSelection } from '../services/formatting'
 import { openMediaLibrary } from '../services/media'
@@ -132,8 +133,9 @@ export function listenToPage(host) {
 	window.addEventListener('scroll', reposition, { passive: true })
 	window.addEventListener('resize', reposition)
 
+	// Unsaved changes are kept as a draft, so leaving only warns if the latest aren't kept yet.
 	window.addEventListener('beforeunload', event => {
-		if (editing.value && pending.value.count && !saving.value) {
+		if (editing.value && pending.value.count && !saving.value && draftPending()) {
 			event.preventDefault()
 			event.returnValue = ''
 		}

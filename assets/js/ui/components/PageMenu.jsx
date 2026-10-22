@@ -6,6 +6,8 @@ import { onArrowKeys } from '../hooks/arrowKeys'
 import { clampLeft, useFloating } from '../hooks/useFloating'
 import { Icon } from './Icon'
 import { Kbd } from './Kbd'
+import { timeAgo } from '../time'
+import { copyPreviewLink, stopSharing } from '../../services/share'
 
 const ITEM =
 	'flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-fg hover:bg-hover focus-visible:bg-hover focus-visible:shadow-none'
@@ -48,6 +50,34 @@ export function PageMenu({ anchor }) {
 				<MenuLink href={page.revisionsUrl} icon="history" onClick={close}>
 					Revisions
 				</MenuLink>
+			)}
+			{page?.canShare && (
+				<button
+					type="button"
+					role="menuitem"
+					class={ITEM}
+					onClick={() => {
+						close()
+						copyPreviewLink()
+					}}
+				>
+					<Icon name="share" class="text-subtle" />
+					<span class="flex-1">Copy preview link</span>
+				</button>
+			)}
+			{page?.shared && (
+				<button
+					type="button"
+					role="menuitem"
+					class={ITEM}
+					onClick={() => {
+						close()
+						stopSharing()
+					}}
+				>
+					<Icon name="close" class="text-subtle" />
+					<span class="flex-1">Stop sharing previews</span>
+				</button>
 			)}
 			<button
 				type="button"
@@ -92,21 +122,5 @@ function MenuLink({ href, icon, onClick, children }) {
 
 /** "Edited 5 minutes ago by Sam". */
 function editedLabel(page) {
-	const modified = Date.parse(page.modified)
-	if (!modified) {
-		return ''
-	}
-	const seconds = Math.round((modified - Date.now()) / 1000)
-	const units = [
-		['year', 31536000],
-		['month', 2592000],
-		['day', 86400],
-		['hour', 3600],
-		['minute', 60],
-	]
-	const [unit, size] = units.find(([, size]) => Math.abs(seconds) >= size) || []
-	const when = unit
-		? new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }).format(Math.round(seconds / size), unit)
-		: 'just now'
-	return `Edited ${when}${page.modifiedBy ? ` by ${page.modifiedBy}` : ''}`
+	return page.modified ? `Edited ${timeAgo(page.modified)}${page.modifiedBy ? ` by ${page.modifiedBy}` : ''}` : ''
 }

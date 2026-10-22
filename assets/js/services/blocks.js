@@ -3,7 +3,6 @@ import { rowInfo, setRowInfo } from '../model/rows'
 import { busy, editing, hoveredRow, lastDeleted, touch } from '../state/signals'
 import { clearStatus, setStatus } from '../state/status'
 import { describeError } from './api'
-import { clearDrafts } from './drafts'
 import { record } from './history'
 import { animate } from './motion'
 import { takePreview, toElement } from './previews'
@@ -73,15 +72,8 @@ export async function addRow(list, index, layout = '') {
 	})
 
 	try {
-		const { preview, index: temporary } = await takePreview(list, layout)
-		const row = toElement(preview.html)
-		setRowInfo(row, { index: temporary, origin: { layout }, layout })
-
+		const row = await createRow(list, layout)
 		await animate(() => placeholder.replaceWith(row), { rows: [placeholder], added: () => [row] })
-		const added = register(row, preview, { isNew: true })
-		if (editing.value) {
-			added.regions.forEach(region => region.activate())
-		}
 		const at = list.indexOf(row)
 		record({
 			label: `Add ${label}`,
@@ -97,6 +89,20 @@ export async function addRow(list, index, layout = '') {
 	} finally {
 		busy.value = ''
 	}
+}
+
+/**
+ * A new row of `layout`, rendered by the server and ready to put on the page, with its fields known.
+ */
+export async function createRow(list, layout) {
+	const { preview, index } = await takePreview(list, layout)
+	const row = toElement(preview.html)
+	setRowInfo(row, { index, origin: { layout }, layout })
+	const added = register(row, preview, { isNew: true })
+	if (editing.value) {
+		added.regions.forEach(region => region.activate())
+	}
+	return row
 }
 
 /** Put a row at an index in its list (moving it, or putting it back). */
@@ -121,7 +127,7 @@ async function take(list, row) {
  * A copy of a row, with copies of the fields and lists inside it. Its fields keep the original's
  * names until it's saved in its own position.
  */
-function copyRow(row) {
+export function copyRow(row) {
 	const copy = row.cloneNode(true)
 	const originals = [row, ...row.querySelectorAll('*')]
 	const copies = [copy, ...copy.querySelectorAll('*')]
@@ -165,8 +171,6 @@ function createPlaceholder(list, label) {
 function changed(row = null) {
 	hoveredRow.value = null
 	lists.forEach(list => list.markEmpty(editing.value))
-	// Block changes can't be restored after a reload, so earlier text drafts would be misleading.
-	clearDrafts()
 	touch()
 	if (row?.isConnected) {
 		flash(row)

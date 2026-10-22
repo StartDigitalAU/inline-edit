@@ -20,6 +20,8 @@ final class Routes
 		private PreviewController $preview,
 		private SettingsController $settings,
 		private PresenceController $presence,
+		private DraftController $draft,
+		private ShareController $share,
 	) {}
 
 	public function register(): void
@@ -92,6 +94,28 @@ final class Routes
 				'post' => ['type' => 'string', 'required' => true, 'pattern' => '^[1-9][0-9]{0,19}$'],
 				// Stop editing: let go of the post lock.
 				'release' => ['type' => 'boolean', 'default' => false],
+			],
+		]);
+
+		register_rest_route(Plugin::REST_NAMESPACE, '/draft', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->draft, 'handle'],
+			'permission_callback' => $canEdit,
+			'args' => [
+				'post' => ['type' => 'string', 'required' => true, 'pattern' => '^[1-9][0-9]{0,19}$'],
+				// What the editor would save, plus what it needs to show it again; null clears it. (Not
+				// `required`: WordPress counts a null value as missing.)
+				'draft' => ['type' => ['object', 'null'], 'default' => null],
+			],
+		]);
+
+		register_rest_route(Plugin::REST_NAMESPACE, '/share', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->share, 'handle'],
+			'permission_callback' => $canEdit,
+			'args' => [
+				'post' => ['type' => 'string', 'required' => true, 'pattern' => '^[1-9][0-9]{0,19}$'],
+				'revoke' => ['type' => 'boolean', 'default' => false],
 			],
 		]);
 

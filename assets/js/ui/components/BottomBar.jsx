@@ -22,7 +22,14 @@ const BAR =
  * Discard, Save, the page menu and Done.
  */
 export function BottomBar() {
-	return <div class={BAR}>{editing.value ? <EditingActions /> : <StartButton />}</div>
+	const menuButton = useRef(null)
+	return (
+		<>
+			<div class={BAR}>{editing.value ? <EditingActions menuButton={menuButton} /> : <StartButton />}</div>
+			{/* Outside the bar: its centring transform would make it the menu's frame of reference. */}
+			{editing.value && menuOpen.value && <PageMenu anchor={menuButton} />}
+		</>
+	)
 }
 
 function StartButton() {
@@ -51,8 +58,7 @@ function UndoRedo({ disabled }) {
 	)
 }
 
-function EditingActions() {
-	const menuButton = useRef(null)
+function EditingActions({ menuButton }) {
 	const { count } = pending.value
 	const locked = saving.value || !!busy.value
 	const list = pageList()
@@ -103,7 +109,6 @@ function EditingActions() {
 			<Button variant="secondary" onClick={toggleEditing} tip="Stop editing" keys={['E']}>
 				Done
 			</Button>
-			{menuOpen.value && <PageMenu anchor={menuButton} />}
 		</div>
 	)
 }

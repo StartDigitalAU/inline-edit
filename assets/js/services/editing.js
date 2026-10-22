@@ -17,7 +17,8 @@ import {
 } from '../state/signals'
 import { clearStatus } from '../state/status'
 import { changesLabel, pendingChanges } from './changes'
-import { clearDrafts, restoreDrafts } from './drafts'
+import { discardDraft, withoutDrafts } from './drafts'
+import { restoreDraft } from './restore'
 import { startPresence, stopPresence } from './presence'
 import { rememberEditing, reloadEditing } from './session'
 
@@ -54,7 +55,7 @@ export function stopEditing() {
 	if (count && !window.confirm('Discard your unsaved changes?')) {
 		return
 	}
-	clearDrafts()
+	discardDraft()
 	rememberEditing(false)
 	stopPresence()
 
@@ -83,7 +84,7 @@ export function discardChanges() {
 	if (!count || !window.confirm(`Discard ${changesLabel(count)}?`)) {
 		return
 	}
-	clearDrafts()
+	discardDraft()
 	if (changedLists.length) {
 		reloadEditing()
 		return
@@ -93,17 +94,19 @@ export function discardChanges() {
 	touch()
 }
 
-export function restoreFoundDrafts() {
-	const found = draftsFound.value || []
-	draftsFound.value = null
-	startEditing()
-	restoreDrafts(found)
-	touch()
+/** Bring back the unsaved changes from before (see services/restore.js). */
+export function restoreFoundDraft() {
+	return withoutDrafts(async () => {
+		const found = draftsFound.value
+		draftsFound.value = null
+		startEditing()
+		await restoreDraft(found.draft)
+	})
 }
 
-export function dismissDrafts() {
+export function dismissDraft() {
 	draftsFound.value = null
-	clearDrafts()
+	discardDraft()
 }
 
 function closeEverything() {

@@ -1,7 +1,6 @@
 import { status, saving, touch } from '../state/signals'
 import { clearStatus } from '../state/status'
 import { escapeHtml } from '../model/text'
-import { saveDrafts } from './drafts'
 
 /**
  * After a field's value changes on the page (typing, formatting, a new image).
@@ -15,7 +14,6 @@ export function fieldChanged(region, el = region.element) {
 	if (status.value.state && !saving.value) {
 		clearStatus()
 	}
-	saveDrafts()
 	touch()
 }
 

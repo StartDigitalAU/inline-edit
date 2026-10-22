@@ -2,19 +2,25 @@
 
 namespace TheStart\InlineEdit;
 
+use TheStart\InlineEdit\Drafts\DraftStore;
 use TheStart\InlineEdit\Fields\Resolver;
 use TheStart\InlineEdit\Fields\VirtualRows;
 use TheStart\InlineEdit\Page\Assets;
 use TheStart\InlineEdit\Page\Registry;
 use TheStart\InlineEdit\Page\TwigFunctions;
 use TheStart\InlineEdit\Posts\PostUpdater;
+use TheStart\InlineEdit\Preview\SharedPreview;
+use TheStart\InlineEdit\Preview\ShareLinks;
+use TheStart\InlineEdit\Rest\DraftController;
 use TheStart\InlineEdit\Rest\PresenceController;
 use TheStart\InlineEdit\Rest\PreviewController;
 use TheStart\InlineEdit\Rest\Routes;
 use TheStart\InlineEdit\Rest\SaveController;
 use TheStart\InlineEdit\Rest\SettingsController;
+use TheStart\InlineEdit\Rest\ShareController;
 use TheStart\InlineEdit\Rows\RowFactory;
 use TheStart\InlineEdit\Rows\TemplateSigner;
+use TheStart\InlineEdit\Saving\ChangeWriter;
 
 /**
  * Front-end editing for Timber and ACF sites.
@@ -27,7 +33,8 @@ use TheStart\InlineEdit\Rows\TemplateSigner;
  *   field's rows, so blocks can be added, moved, duplicated and deleted on the page.
  *
  * Nothing is written until the editor's Save, which sends block and text changes together
- * (see Rest\SaveController).
+ * (see Rest\SaveController). Until then, changes are kept as a draft on the server (Drafts\DraftStore),
+ * which can be shown to others with a preview link (Preview\SharedPreview).
  *
  * Hooks:
  * - `sd_inline_edit_enabled` (filter) return false to turn front-end editing off for a request.
@@ -57,17 +64,24 @@ final class Plugin
 		$resolver = new Resolver($virtual, $rows);
 		$signer = new TemplateSigner();
 		$registry = new Registry($resolver, $signer);
+		$writer = new ChangeWriter($resolver);
+		$drafts = new DraftStore();
+		$links = new ShareLinks();
 
 		$twig = new TwigFunctions($access, $registry);
-		$assets = new Assets($registry);
+		$assets = new Assets($registry, $drafts, $links);
+		$preview = new SharedPreview($resolver, $writer, $drafts, $links);
 		$routes = new Routes(
-			new SaveController($resolver, new PostUpdater()),
+			new SaveController($resolver, $writer, new PostUpdater()),
 			new PreviewController($resolver, $virtual, $rows, $signer, $registry, $access),
 			new SettingsController($resolver, $virtual, $rows),
 			new PresenceController($resolver),
+			new DraftController($resolver, $drafts),
+			new ShareController($resolver, $links),
 		);
 
 		add_filter('timber/twig/functions', [$twig, 'register']);
+		add_action('template_redirect', [$preview, 'apply'], 0);
 		add_action('wp_footer', [$assets, 'enqueue'], 1);
 		add_action('rest_api_init', [$routes, 'register']);
 	}

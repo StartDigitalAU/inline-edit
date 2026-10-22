@@ -35,7 +35,7 @@ export const settingsFor = signal(null)
 export const picker = signal(null)
 /** The element whose tooltip is showing. */
 export const tooltipFor = signal(null)
-/** Unsaved changes found from before a reload: [{ region, draft }]. */
+/** Unsaved changes kept from before: { draft, size }. */
 export const draftsFound = signal(null)
 /** The last deleted row, offered back in a toast: { label, change } (see services/history.js). */
 export const lastDeleted = signal(null)

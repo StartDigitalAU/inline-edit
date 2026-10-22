@@ -2,9 +2,12 @@
 
 namespace TheStart\InlineEdit\Page;
 
+use TheStart\InlineEdit\Drafts\DraftStore;
 use TheStart\InlineEdit\Fields\Resolver;
 use TheStart\InlineEdit\Images\FocusPoints;
 use TheStart\InlineEdit\Plugin;
+use TheStart\InlineEdit\Posts\Transaction;
+use TheStart\InlineEdit\Preview\ShareLinks;
 use WP_Post;
 
 /**
@@ -14,7 +17,11 @@ final class Assets
 {
 	private const FONTS = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap';
 
-	public function __construct(private Registry $registry) {}
+	public function __construct(
+		private Registry $registry,
+		private DraftStore $drafts,
+		private ShareLinks $links,
+	) {}
 
 	public function enqueue(): void
 	{
@@ -48,6 +55,8 @@ final class Assets
 			'previewEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/preview'),
 			'settingsEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/settings'),
 			'presenceEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/presence'),
+			'draftEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/draft'),
+			'shareEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/share'),
 			'restRoot' => rest_url(),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'nonceEndpoint' => admin_url('admin-ajax.php?action=rest-nonce'),
@@ -91,6 +100,10 @@ final class Assets
 
 		return [
 			'id' => (string) $post->ID,
+			// This person's unsaved changes from before, and whether they're shared.
+			'draft' => $this->drafts->get($post->ID),
+			'shared' => $this->links->hasLink($post->ID),
+			'canShare' => Transaction::canRollBack(),
 			'title' => html_entity_decode(wp_strip_all_tags(get_the_title($post)), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 			'editUrl' => get_edit_post_link($post->ID, 'raw'),
 			'revisionsUrl' => $revisions ? admin_url('revision.php?revision=' . (int) reset($revisions)) : null,

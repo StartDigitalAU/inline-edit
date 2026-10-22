@@ -32,5 +32,4 @@ export const LOCKED_REASONS = {
 
 export const STORAGE = {
 	active: 'sdInlineEdit:active',
-	drafts: `sdInlineEdit:drafts:${location.pathname}`,
 }
