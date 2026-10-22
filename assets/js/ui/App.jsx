@@ -5,6 +5,7 @@ import { BottomBar } from './components/BottomBar'
 import { DevicePreview } from './components/DevicePreview'
 import { DragLayer } from './components/DragLayer'
 import { DraftsToast } from './components/DraftsToast'
+import { PresenceNotice } from './components/PresenceNotice'
 import { FieldLabel } from './components/FieldLabel'
 import { FocusEditor } from './components/FocusEditor'
 import { ImageDrop } from './components/ImageDrop'
@@ -34,6 +35,7 @@ export function App({ root }) {
 			<LockedTip />
 			<SettingsPanel />
 			<FormatBar />
+			<PresenceNotice />
 			<DraftsToast />
 			<UndoToast />
 			<BottomBar />

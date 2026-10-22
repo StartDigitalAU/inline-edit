@@ -47,6 +47,7 @@ final class Assets
 			'endpoint' => rest_url(Plugin::REST_NAMESPACE . '/save'),
 			'previewEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/preview'),
 			'settingsEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/settings'),
+			'presenceEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/presence'),
 			'restRoot' => rest_url(),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'nonceEndpoint' => admin_url('admin-ajax.php?action=rest-nonce'),
@@ -89,6 +90,7 @@ final class Assets
 		$editor = get_userdata((int) get_post_meta($post->ID, '_edit_last', true));
 
 		return [
+			'id' => (string) $post->ID,
 			'title' => html_entity_decode(wp_strip_all_tags(get_the_title($post)), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 			'editUrl' => get_edit_post_link($post->ID, 'raw'),
 			'revisionsUrl' => $revisions ? admin_url('revision.php?revision=' . (int) reset($revisions)) : null,

@@ -51,6 +51,8 @@ export const dropTarget = signal(null)
 export const uploads = signal([])
 /** Previewing the page at a device's width: { device, html }, or null. */
 export const devicePreview = signal(null)
+/** Someone else editing this page (in the admin or on the page): { name, avatar }, or null. */
+export const otherEditor = signal(null)
 /** While the media library is open, the editor's UI steps aside. */
 export const mediaOpen = signal(false)
 

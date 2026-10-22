@@ -18,6 +18,7 @@ import {
 import { clearStatus } from '../state/status'
 import { changesLabel, pendingChanges } from './changes'
 import { clearDrafts, restoreDrafts } from './drafts'
+import { startPresence, stopPresence } from './presence'
 import { rememberEditing, reloadEditing } from './session'
 
 /**
@@ -40,6 +41,7 @@ export function startEditing() {
 	editing.value = true
 	lists.forEach(list => list.markEmpty(true))
 	rememberEditing(true)
+	startPresence()
 	clearStatus()
 	touch()
 }
@@ -54,6 +56,7 @@ export function stopEditing() {
 	}
 	clearDrafts()
 	rememberEditing(false)
+	stopPresence()
 
 	// Added, moved and deleted blocks are only on this page, so a reload puts it back as saved.
 	if (changedLists.length) {

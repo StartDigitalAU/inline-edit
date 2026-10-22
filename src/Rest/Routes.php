@@ -19,6 +19,7 @@ final class Routes
 		private SaveController $save,
 		private PreviewController $preview,
 		private SettingsController $settings,
+		private PresenceController $presence,
 	) {}
 
 	public function register(): void
@@ -80,6 +81,17 @@ final class Routes
 					'default' => [],
 					'additionalProperties' => ['type' => 'string', 'maxLength' => 2000],
 				],
+			],
+		]);
+
+		register_rest_route(Plugin::REST_NAMESPACE, '/presence', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->presence, 'handle'],
+			'permission_callback' => $canEdit,
+			'args' => [
+				'post' => ['type' => 'string', 'required' => true, 'pattern' => '^[1-9][0-9]{0,19}$'],
+				// Stop editing: let go of the post lock.
+				'release' => ['type' => 'boolean', 'default' => false],
 			],
 		]);
 

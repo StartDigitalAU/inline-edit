@@ -8,6 +8,7 @@ use TheStart\InlineEdit\Page\Assets;
 use TheStart\InlineEdit\Page\Registry;
 use TheStart\InlineEdit\Page\TwigFunctions;
 use TheStart\InlineEdit\Posts\PostUpdater;
+use TheStart\InlineEdit\Rest\PresenceController;
 use TheStart\InlineEdit\Rest\PreviewController;
 use TheStart\InlineEdit\Rest\Routes;
 use TheStart\InlineEdit\Rest\SaveController;
@@ -63,6 +64,7 @@ final class Plugin
 			new SaveController($resolver, new PostUpdater()),
 			new PreviewController($resolver, $virtual, $rows, $signer, $registry, $access),
 			new SettingsController($resolver, $virtual, $rows),
+			new PresenceController($resolver),
 		);
 
 		add_filter('timber/twig/functions', [$twig, 'register']);
