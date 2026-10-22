@@ -1,0 +1,181 @@
+import { useState } from 'preact/hooks'
+import { deleteRow, duplicateRow, moveRow } from '../../services/blocks'
+import { busy, editing, hoveredRow, picker, revision, saving } from '../../state/signals'
+import { clamp, useFloating } from '../hooks/useFloating'
+import { Button } from './Button'
+import { Icon } from './Icon'
+
+const INSET = 10
+
+/**
+ * Controls for the block (or card) under the pointer: an outline, a toolbar to move, duplicate or
+ * delete it, and buttons on its edges to add one before or after it.
+ */
+export function BlockControls() {
+	const hovered = hoveredRow.value
+	revision.value
+	if (!editing.value || !hovered?.row.isConnected || busy.value || saving.value || picker.value) {
+		return null
+	}
+	return <Controls key={hovered.row} {...hovered} />
+}
+
+function Controls({ list, row }) {
+	const [edge, setEdge] = useState(null)
+	const horizontal = list.isHorizontal()
+	const item = list.itemWithArticle
+	const canInsert = list.canAdd()
+	const insertAt = index => (picker.value = { list, index })
+	const index = list.indexOf(row)
+
+	return (
+		<>
+			<Outline row={row} />
+			{edge && <InsertLine row={row} edge={edge} horizontal={horizontal} />}
+			<Toolbar list={list} row={row} horizontal={horizontal} />
+			{canInsert && (
+				<>
+					<InsertButton
+						row={row}
+						edge="before"
+						horizontal={horizontal}
+						tip={`Add ${item} ${horizontal ? 'before' : 'above'}`}
+						onHover={setEdge}
+						onClick={() => insertAt(index)}
+					/>
+					<InsertButton
+						row={row}
+						edge="after"
+						horizontal={horizontal}
+						tip={`Add ${item} ${horizontal ? 'after' : 'below'}`}
+						onHover={setEdge}
+						onClick={() => insertAt(index + 1)}
+					/>
+				</>
+			)}
+		</>
+	)
+}
+
+/**
+ * Light and dark rings together, so the outline shows on any section colour.
+ */
+function Outline({ row }) {
+	const ref = useFloating(() => {
+		const rect = row.getBoundingClientRect()
+		Object.assign(ref.current.style, { width: `${rect.width}px`, height: `${rect.height}px` })
+		return { left: rect.left, top: rect.top }
+	})
+	return (
+		<div
+			ref={ref}
+			class="pointer-events-none absolute left-0 top-0 rounded-sm shadow-[inset_0_0_0_1px_rgb(255_255_255/0.6),inset_0_0_0_2px_rgb(10_10_10/0.6)]"
+		/>
+	)
+}
+
+function Toolbar({ list, row, horizontal }) {
+	const index = list.indexOf(row)
+	const last = list.rows().length - 1
+
+	// Top right of the block, kept in view while scrolling through a tall one.
+	const ref = useFloating(({ width, height }) => {
+		const rect = row.getBoundingClientRect()
+		const stuckToScreen = Math.max(rect.top + INSET, INSET)
+		return {
+			left: clamp(rect.right - width - INSET, INSET, window.innerWidth - width - INSET),
+			top: Math.max(Math.min(stuckToScreen, rect.bottom - height - INSET), rect.top),
+		}
+	})
+
+	return (
+		<div
+			ref={ref}
+			class="floating flex animate-pop items-center gap-0.5 rounded-[10px] p-[3px]"
+			role="toolbar"
+			aria-label={list.rowLabel(row)}
+		>
+			<span class="max-w-[180px] truncate border-r border-line pl-[7px] pr-2 text-[13px] font-medium">
+				{list.rowLabel(row)}
+			</span>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				class="ml-1"
+				tip={horizontal ? 'Move left' : 'Move up'}
+				disabled={index === 0}
+				onClick={() => moveRow(list, row, -1)}
+			>
+				<Icon name="up" class={horizontal ? '-rotate-90' : ''} />
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				tip={horizontal ? 'Move right' : 'Move down'}
+				disabled={index === last}
+				onClick={() => moveRow(list, row, 1)}
+			>
+				<Icon name="down" class={horizontal ? '-rotate-90' : ''} />
+			</Button>
+			<Button variant="ghost" size="icon-sm" tip="Duplicate" disabled={!list.canDuplicate(row)} onClick={() => duplicateRow(list, row)}>
+				<Icon name="copy" />
+			</Button>
+			<Button
+				variant="danger"
+				size="icon-sm"
+				tip="Delete"
+				disabled={!list.canRemove()}
+				onClick={() => deleteRow(list, row)}
+			>
+				<Icon name="trash" />
+			</Button>
+		</div>
+	)
+}
+
+/**
+ * A round "+" on the middle of one edge: top and bottom for stacked rows, sides for a grid.
+ * Neighbouring rows' buttons share a spot, so these don't animate in (it would flash on every
+ * move between rows) or grow on hover (its edge would flicker under the pointer).
+ */
+function InsertButton({ row, edge, horizontal, tip, onHover, onClick }) {
+	const ref = useFloating(({ width, height }) => {
+		const rect = row.getBoundingClientRect()
+		const x = horizontal ? (edge === 'before' ? rect.left : rect.right) : rect.left + rect.width / 2
+		const y = horizontal ? rect.top + Math.min(rect.height, window.innerHeight) / 2 : edge === 'before' ? rect.top : rect.bottom
+		return { left: x - width / 2, top: y - height / 2 }
+	})
+
+	return (
+		<button
+			ref={ref}
+			type="button"
+			class="pointer-events-auto absolute left-0 top-0 grid size-7 place-items-center rounded-full bg-canvas text-fg shadow-float transition-colors hover:bg-accent hover:text-white"
+			data-tip={tip}
+			aria-label={tip}
+			onPointerEnter={() => onHover(edge)}
+			onPointerLeave={() => onHover(null)}
+			onClick={onClick}
+		>
+			<Icon name="plus" />
+		</button>
+	)
+}
+
+/**
+ * Where a new row will go, while its "+" is hovered.
+ */
+function InsertLine({ row, edge, horizontal }) {
+	const ref = useFloating(() => {
+		const rect = row.getBoundingClientRect()
+		const style = ref.current.style
+		style.width = horizontal ? '2px' : `${rect.width}px`
+		style.height = horizontal ? `${rect.height}px` : '2px'
+		const x = horizontal ? (edge === 'before' ? rect.left : rect.right) - 1 : rect.left
+		const y = horizontal ? rect.top : (edge === 'before' ? rect.top : rect.bottom) - 1
+		return { left: x, top: y }
+	})
+	return (
+		<div ref={ref} class="pointer-events-none absolute left-0 top-0 rounded-sm bg-accent shadow-[0_0_0_3px_rgb(0_112_243/0.2)]" />
+	)
+}

@@ -1,0 +1,134 @@
+/* Styles on the page itself while editing. The editor's own UI is styled in editor.css. */
+
+.sd-inline-editing [data-sd-edit] {
+	--sd-ring: 50 145 255;
+	outline: 1px dashed rgb(var(--sd-ring) / 0.6);
+	outline-offset: 6px;
+	border-radius: 2px;
+	cursor: text;
+	transition:
+		outline-color 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.sd-inline-editing [data-sd-edit]:hover {
+	outline-style: solid;
+	outline-color: rgb(var(--sd-ring));
+	box-shadow: 0 0 0 6px rgb(var(--sd-ring) / 0.07);
+}
+
+.sd-inline-editing [data-sd-edit]:focus,
+.sd-inline-editing [data-sd-edit]:focus-visible {
+	--sd-ring: 0 112 243;
+	outline: 1.5px solid rgb(var(--sd-ring));
+	box-shadow: 0 0 0 6px rgb(var(--sd-ring) / 0.06);
+}
+
+.sd-inline-editing [data-sd-edit][data-sd-dirty] {
+	--sd-ring: 255 178 36;
+	outline-style: solid;
+	outline-color: rgb(var(--sd-ring));
+}
+
+.sd-inline-editing [data-sd-edit][data-sd-error] {
+	--sd-ring: 229 72 77;
+	outline: 1.5px solid rgb(var(--sd-ring));
+}
+
+.sd-inline-editing [data-sd-edit][data-sd-kind="locked"] {
+	--sd-ring: 135 135 135;
+	cursor: not-allowed;
+}
+
+.sd-inline-editing [data-sd-edit][data-sd-kind="multi"] {
+	white-space: pre-wrap;
+}
+
+/* Keep the caret clear of the bottom bar when the browser scrolls to it. */
+.sd-inline-editing {
+	scroll-padding-bottom: 120px;
+}
+
+/* Images often sit in frames with overflow hidden, so their ring goes inside. */
+.sd-inline-editing img[data-sd-edit] {
+	outline-offset: -3px;
+	outline-width: 1.5px;
+	box-shadow: none !important;
+	pointer-events: auto !important;
+	cursor: pointer;
+	transition:
+		outline-color 0.15s ease,
+		filter 0.2s ease;
+}
+
+.sd-inline-editing img[data-sd-edit]:hover {
+	filter: brightness(0.88);
+}
+
+/* Empty fields stay clickable, labelled with the field name. */
+.sd-inline-editing [data-sd-edit]:empty {
+	min-height: 1.5em;
+	min-width: 4em;
+}
+
+.sd-inline-editing [data-sd-edit]:empty::before {
+	content: attr(aria-label);
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+/* A block that was just added, moved or duplicated. */
+.sd-inline-editing [data-sd-flash] {
+	outline: 2px solid rgb(0 112 243);
+	outline-offset: -2px;
+	animation: sd-flash 1.6s ease-out forwards;
+}
+
+@keyframes sd-flash {
+	to {
+		outline-color: rgb(0 112 243 / 0);
+	}
+}
+
+/* An empty list is one big "Add a block" button. */
+.sd-inline-editing [data-sd-empty] {
+	cursor: pointer;
+}
+
+.sd-inline-editing [data-sd-empty]::before {
+	content: "+  " attr(data-sd-empty);
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: min(100% - 32px, 1120px);
+	min-height: 160px;
+	margin: 32px auto;
+	border: 1px dashed rgb(128 128 128 / 0.6);
+	border-radius: 12px;
+	color: rgb(128 128 128);
+	font: 500 15px/1.4 Geist, system-ui, -apple-system, "Segoe UI", sans-serif;
+	letter-spacing: -0.006em;
+	white-space: pre;
+	pointer-events: none;
+	transition:
+		border-color 0.15s ease,
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.sd-inline-editing [data-sd-empty]:hover::before {
+	border-color: rgb(0 112 243);
+	background: rgb(0 112 243 / 0.05);
+	color: rgb(0 112 243);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sd-inline-editing [data-sd-edit] {
+		transition: none;
+	}
+
+	.sd-inline-editing [data-sd-flash] {
+		animation-duration: 0.01ms;
+	}
+}

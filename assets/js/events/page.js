@@ -1,0 +1,145 @@
+import { lists, regionFor, rowAt } from '../model/page'
+import {
+	activeField,
+	editing,
+	formatPanel,
+	hoveredField,
+	hoveredRow,
+	lockedField,
+	menuOpen,
+	picker,
+	saving,
+	viewport,
+} from '../state/signals'
+import { pending } from '../services/changes'
+import { fieldChanged, pasteText } from '../services/fields'
+import { forgetSelection, rememberSelection } from '../services/formatting'
+import { openMediaLibrary } from '../services/media'
+
+/**
+ * Listeners on the page itself: typing into fields, hovering fields and blocks, clicking images.
+ * `host` is the editor's own UI, which events from inside it are retargeted to.
+ */
+export function listenToPage(host) {
+	const fromEditor = event => event.composedPath().includes(host)
+	const fieldAt = target => {
+		const region = editing.value ? regionFor(target) : null
+		return region ? { region, el: target.closest('[data-sd-edit]') } : null
+	}
+
+	document.addEventListener('input', event => {
+		const field = fieldAt(event.target)
+		if (field?.region.isText) {
+			fieldChanged(field.region, field.el)
+			// The block toolbar steps aside while typing, and comes back with the mouse.
+			hoveredRow.value = null
+		}
+	})
+
+	document.addEventListener('paste', event => {
+		const field = fieldAt(event.target)
+		if (field?.region.isText) {
+			event.preventDefault()
+			pasteText(field.region, event.clipboardData?.getData('text/plain') || '')
+		}
+	})
+
+	// Dropped content can be anything, including images and markup from other pages.
+	for (const type of ['dragover', 'drop', 'dragstart']) {
+		document.addEventListener(type, event => {
+			if (fieldAt(event.target)) {
+				event.preventDefault()
+			}
+		})
+	}
+
+	document.addEventListener('mouseover', event => {
+		if (!editing.value || fromEditor(event)) {
+			return
+		}
+		hoveredField.value = fieldAt(event.target)
+		hoveredRow.value = rowAt(event.target)
+	})
+	document.documentElement.addEventListener('mouseleave', () => {
+		hoveredField.value = null
+		hoveredRow.value = null
+	})
+
+	document.addEventListener('focusin', event => {
+		const field = fieldAt(event.target)
+		if (!field?.region.isText) {
+			return
+		}
+		// Coming back from the formatting bar refocuses the same element, which keeps its selection.
+		if (field.el !== activeField.value?.el) {
+			forgetSelection()
+		}
+		activeField.value = field
+		lockedField.value = null
+		menuOpen.value = false
+	})
+
+	document.addEventListener('focusout', event => {
+		// Focus moving into the editor's UI (e.g. the link field) keeps the field active.
+		if (!editing.value || event.relatedTarget === host || fieldAt(event.relatedTarget)?.el === activeField.value?.el) {
+			return
+		}
+		setTimeout(() => {
+			const el = activeField.value?.el
+			if (document.activeElement !== host && !el?.contains(document.activeElement)) {
+				activeField.value = null
+				formatPanel.value = ''
+			}
+		})
+	})
+
+	document.addEventListener('selectionchange', () => {
+		if (editing.value && activeField.value?.region.kind === 'rich') {
+			rememberSelection()
+		}
+	})
+
+	document.addEventListener('click', event => onClick(event, fieldAt, fromEditor), true)
+
+	const reposition = () => viewport.value++
+	window.addEventListener('scroll', reposition, { passive: true })
+	window.addEventListener('resize', reposition)
+
+	window.addEventListener('beforeunload', event => {
+		if (editing.value && pending.value.count && !saving.value) {
+			event.preventDefault()
+			event.returnValue = ''
+		}
+	})
+}
+
+function onClick(event, fieldAt, fromEditor) {
+	if (!editing.value || fromEditor(event)) {
+		return
+	}
+	menuOpen.value = false
+	// Dropdowns close on a click elsewhere; the link field stays open until it's done with.
+	if (formatPanel.value !== 'link') {
+		formatPanel.value = ''
+	}
+
+	// An empty list is one big "Add a block" button.
+	const emptyList = lists.find(list => list.el === event.target && list.el.hasAttribute('data-sd-empty'))
+	if (emptyList) {
+		event.preventDefault()
+		picker.value = { list: emptyList, index: 0 }
+		return
+	}
+
+	const field = fieldAt(event.target)
+	lockedField.value = field && !field.region.isEditable ? field : null
+
+	if (field?.region.kind === 'image') {
+		event.preventDefault()
+		event.stopPropagation()
+		openMediaLibrary(field.region, field.el)
+	} else if (field && (!field.region.isEditable || event.target.closest('a'))) {
+		// Links inside editable text are for editing, not following.
+		event.preventDefault()
+	}
+}

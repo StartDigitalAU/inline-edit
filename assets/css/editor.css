@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	/* The editor's root: a layer over the page that only its own UI responds to. */
+	:host {
+		all: initial;
+		position: fixed;
+		inset: 0;
+		z-index: 2147483000;
+		pointer-events: none;
+		@apply font-sans text-sm text-fg antialiased;
+		letter-spacing: -0.006em;
+	}
+
+	[hidden] {
+		display: none !important;
+	}
+
+	:focus-visible {
+		@apply shadow-focus outline-none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		::before,
+		::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition: none !important;
+		}
+	}
+}
+
+@layer components {
+	/* A panel floating over the page, positioned by useFloating(). */
+	.floating {
+		@apply pointer-events-auto absolute left-0 top-0 bg-canvas shadow-float;
+	}
+}
