@@ -3,6 +3,7 @@
 namespace TheStart\InlineEdit\Page;
 
 use TheStart\InlineEdit\Fields\Resolver;
+use TheStart\InlineEdit\Images\FocusPoints;
 use TheStart\InlineEdit\Plugin;
 use WP_Post;
 
@@ -56,6 +57,8 @@ final class Assets
 			'lists' => $this->registry->lists(),
 			'page' => $this->page(),
 			'styleFormats' => StyleFormats::all(),
+			'mediaEndpoint' => rest_url('wp/v2/media'),
+			'focusPoints' => FocusPoints::supported(),
 			// Field types edited in a block's settings panel.
 			'settingTypes' => Resolver::SETTING_TYPES,
 		];

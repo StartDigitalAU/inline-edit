@@ -29,6 +29,11 @@ export async function post(url, payload, retry = true) {
 	throw error
 }
 
+/** For requests made outside post() and get(), e.g. file uploads with progress. */
+export function nonceHeader() {
+	return { 'X-WP-Nonce': nonce }
+}
+
 export async function get(url, signal) {
 	const response = await fetch(url, { credentials: 'same-origin', headers: { 'X-WP-Nonce': nonce }, signal })
 	return response.ok ? response.json() : null

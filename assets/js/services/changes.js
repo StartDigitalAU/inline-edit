@@ -1,10 +1,11 @@
 import { computed } from '@preact/signals'
-import { liveLists, liveRegions, liveSettings, rowsAround } from '../model/page'
+import { focusPoints, liveLists, liveRegions, liveSettings, rowsAround } from '../model/page'
 import { revision } from '../state/signals'
 
 /**
  * Everything not saved yet: lists whose rows were added, moved, duplicated or deleted (outermost
- * first, as they must be saved), fields with changed values, and changed settings.
+ * first, as they must be saved), fields with changed values, changed settings, and images' changed
+ * focus points.
  */
 export function pendingChanges() {
 	const lists = liveLists()
@@ -12,8 +13,9 @@ export function pendingChanges() {
 		.sort((a, b) => rowsAround(a.el).length - rowsAround(b.el).length)
 	const fields = liveRegions().filter(region => region.dirty)
 	const settings = liveSettings().filter(setting => setting.dirty)
+	const focus = [...focusPoints.values()].filter(point => point.dirty)
 
-	return { lists, fields, settings, count: lists.length + fields.length + settings.length }
+	return { lists, fields, settings, focus, count: lists.length + fields.length + settings.length + focus.length }
 }
 
 export const pending = computed(() => {

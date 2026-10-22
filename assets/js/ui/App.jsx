@@ -5,6 +5,9 @@ import { BottomBar } from './components/BottomBar'
 import { DragLayer } from './components/DragLayer'
 import { DraftsToast } from './components/DraftsToast'
 import { FieldLabel } from './components/FieldLabel'
+import { FocusEditor } from './components/FocusEditor'
+import { ImageDrop } from './components/ImageDrop'
+import { ImageTools } from './components/ImageTools'
 import { FormatBar } from './components/FormatBar'
 import { LockedTip } from './components/LockedTip'
 import { SettingsPanel } from './components/settings/SettingsPanel'
@@ -24,6 +27,9 @@ export function App({ root }) {
 		<>
 			<FieldLabel />
 			<BlockControls />
+			<ImageTools />
+			<ImageDrop />
+			<FocusEditor />
 			<LockedTip />
 			<SettingsPanel />
 			<FormatBar />

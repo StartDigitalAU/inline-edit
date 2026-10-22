@@ -25,6 +25,7 @@ const PATHS = {
 	search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.5-4.5"/>',
 	settings:
 		'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+	focus: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>',
 	close: '<path d="M6 6l12 12M18 6 6 18"/>',
 	undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
 	redo: '<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',

@@ -43,6 +43,12 @@ export const lastDeleted = signal(null)
 export const dragging = signal(null)
 /** The formatting bar's open panel: '', 'block', 'style' or 'link'. */
 export const formatPanel = signal('')
+/** Setting an image's focus point: { region, el }. */
+export const focusing = signal(null)
+/** An image a file is being dragged over: its element. */
+export const dropTarget = signal(null)
+/** Images being uploaded: [{ el, progress }], progress from 0 to 1. */
+export const uploads = signal([])
 /** While the media library is open, the editor's UI steps aside. */
 export const mediaOpen = signal(false)
 

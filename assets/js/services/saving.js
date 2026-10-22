@@ -15,7 +15,7 @@ import { reloadEditing } from './session'
  * nothing changed since and then write it in its new place.
  */
 export async function save() {
-	const { lists, fields, settings, count } = pendingChanges()
+	const { lists, fields, settings, focus, count } = pendingChanges()
 	if (!editing.value || saving.value || busy.value || !count) {
 		return
 	}
@@ -50,7 +50,13 @@ export async function save() {
 	}))
 
 	try {
-		const result = await post(config.endpoint, { lists: listChanges, changes: [...fieldChanges, ...settingChanges] })
+		const images = focus.map(point => ({ id: point.id, attachment: Number(point.attachment), x: point.x, y: point.y }))
+		const result = await post(config.endpoint, {
+			lists: listChanges,
+			changes: [...fieldChanges, ...settingChanges],
+			images,
+		})
+		focus.forEach(point => point.markSaved())
 
 		for (const item of result.saved) {
 			const region = regions.find(candidate => candidate.id === item.id)

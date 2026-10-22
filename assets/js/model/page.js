@@ -10,6 +10,8 @@ export const regions = []
 export const lists = []
 /** Settings of rows, loaded when a block's settings panel first opens. */
 export const settings = []
+/** Focus points of images, by attachment ID, once someone starts changing one. */
+export const focusPoints = new Map()
 
 /**
  * Pick up what the server marked as editable inside `root`: elements with `data-sd-edit` and

@@ -38,6 +38,8 @@ export class Region {
 		this.base = data.base
 		this.editUrl = data.editUrl
 		this.uploadedTo = data.uploadedTo
+		// An image's focus point as [x, y] percentages, if the site has them.
+		this.focus = data.focus || null
 		this.elements = elements
 
 		// The field's stored name, or null for one in a row that hasn't been saved yet.

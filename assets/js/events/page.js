@@ -1,6 +1,7 @@
 import { lists, regionFor, rowAt } from '../model/page'
 import {
 	activeField,
+	dropTarget,
 	editing,
 	formatPanel,
 	hoveredField,
@@ -16,6 +17,7 @@ import { pending } from '../services/changes'
 import { fieldChanged, pasteText } from '../services/fields'
 import { forgetSelection, rememberSelection } from '../services/formatting'
 import { openMediaLibrary } from '../services/media'
+import { uploadImage } from '../services/upload'
 
 /**
  * Listeners on the page itself: typing into fields, hovering fields and blocks, clicking images.
@@ -45,14 +47,38 @@ export function listenToPage(host) {
 		}
 	})
 
-	// Dropped content can be anything, including images and markup from other pages.
-	for (const type of ['dragover', 'drop', 'dragstart']) {
-		document.addEventListener(type, event => {
-			if (fieldAt(event.target)) {
-				event.preventDefault()
-			}
-		})
-	}
+	// An image file dropped on an image field replaces it. Anything else dropped on a field (markup
+	// from other pages, images into text) is ignored.
+	const hasFiles = event => [...(event.dataTransfer?.types || [])].includes('Files')
+	document.addEventListener('dragstart', event => fieldAt(event.target) && event.preventDefault())
+	document.addEventListener('dragover', event => {
+		const field = fieldAt(event.target)
+		if (!field) {
+			dropTarget.value = null
+			return
+		}
+		event.preventDefault()
+		const accepts = field.region.kind === 'image' && hasFiles(event)
+		event.dataTransfer.dropEffect = accepts ? 'copy' : 'none'
+		dropTarget.value = accepts ? field.el : null
+	})
+	document.addEventListener('dragleave', event => {
+		if (event.target === dropTarget.value) {
+			dropTarget.value = null
+		}
+	})
+	document.addEventListener('drop', event => {
+		const field = fieldAt(event.target)
+		dropTarget.value = null
+		if (!field) {
+			return
+		}
+		event.preventDefault()
+		const file = event.dataTransfer?.files?.[0]
+		if (field.region.kind === 'image' && file) {
+			uploadImage(field.region, field.el, file)
+		}
+	})
 
 	document.addEventListener('mouseover', event => {
 		if (!editing.value || fromEditor(event)) {

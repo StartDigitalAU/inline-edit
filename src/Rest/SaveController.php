@@ -5,6 +5,7 @@ namespace TheStart\InlineEdit\Rest;
 use TheStart\InlineEdit\Fields\Field;
 use TheStart\InlineEdit\Fields\Resolver;
 use TheStart\InlineEdit\Fingerprint;
+use TheStart\InlineEdit\Images\FocusPoints;
 use TheStart\InlineEdit\Posts\PostUpdater;
 use TheStart\InlineEdit\Posts\Transaction;
 use TheStart\InlineEdit\Versioned;
@@ -21,6 +22,7 @@ use WP_REST_Request;
  * 1. Nothing changed since the page loaded may be overwritten, so every `original` is checked first.
  * 2. Rows are reordered, outermost lists first, which also gives new rows their stored fields.
  * 3. Field values are checked and written under their new names.
+ * 4. New image focus points are handed to the site (see Images\FocusPoints).
  *
  * Steps 2 and 3 run in one database transaction, so a value that fails validation leaves nothing
  * half saved.
@@ -39,7 +41,8 @@ final class SaveController
 	{
 		$lists = $request['lists'];
 		$changes = $request['changes'];
-		if (!$lists && !$changes) {
+		$images = $request['images'];
+		if (!$lists && !$changes && !$images) {
 			return new WP_Error('sd_inline_edit_empty', __('There’s nothing to save.'), ['status' => 400]);
 		}
 
@@ -51,6 +54,12 @@ final class SaveController
 
 		$errors = new SaveErrors();
 		$this->checkUnchanged($lists, $changes, $errors);
+		foreach ($images as $image) {
+			$problem = FocusPoints::problem($image['attachment']);
+			if ($problem) {
+				$errors->add($image['id'], $problem);
+			}
+		}
 		if ($errors->any()) {
 			return $errors->response();
 		}
@@ -68,6 +77,10 @@ final class SaveController
 			$field->write($value);
 		}
 		$transaction->commit();
+
+		foreach ($images as $image) {
+			FocusPoints::save($image['attachment'], $image['x'], $image['y']);
+		}
 
 		$this->updater->saved($posts, $this->titles($fields), $this->names($lists, $fields));
 

@@ -38,6 +38,13 @@ final class Routes
 					'base' => $this->fingerprint(),
 					'value' => ['type' => 'string', 'required' => true, 'maxLength' => self::MAX_LENGTH],
 				]),
+				// New focus points for images.
+				'images' => $this->listOf([
+					'id' => $this->id(),
+					'attachment' => ['type' => 'integer', 'required' => true, 'minimum' => 1],
+					'x' => ['type' => 'number', 'required' => true, 'minimum' => 0, 'maximum' => 100],
+					'y' => ['type' => 'number', 'required' => true, 'minimum' => 0, 'maximum' => 100],
+				]),
 				// New orders of rows, outermost lists first.
 				'lists' => $this->listOf([
 					'id' => $this->id(),

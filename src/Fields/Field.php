@@ -3,6 +3,7 @@
 namespace TheStart\InlineEdit\Fields;
 
 use TheStart\InlineEdit\Fingerprint;
+use TheStart\InlineEdit\Images\FocusPoints;
 use TheStart\InlineEdit\Versioned;
 use WP_Error;
 
@@ -122,7 +123,7 @@ final class Field implements Versioned
 			return [
 				'src' => $id ? (string) wp_get_attachment_url($id) : '',
 				'alt' => $id ? (string) get_post_meta($id, '_wp_attachment_image_alt', true) : '',
-				'position' => $id ? (string) apply_filters('sd_inline_edit_image_position', '50% 50%', $id) : '',
+				'position' => $id ? FocusPoints::cssPosition($id) : '',
 			];
 		}
 
@@ -145,6 +146,8 @@ final class Field implements Versioned
 			'reason' => $state['reason'],
 			'base' => $this->fingerprint(),
 			'editUrl' => $this->editUrl,
+			// Where the image's focus point is, as [x, y] percentages.
+			'focus' => $this->type === 'image' && is_numeric($this->raw()) ? FocusPoints::of((int) $this->raw()) : null,
 			// Image fields set to "Uploaded to post" only offer that post's media.
 			'uploadedTo' => $this->type === 'image' && ($this->acf['library'] ?? '') === 'uploadedTo' ? $this->postId : null,
 		];
