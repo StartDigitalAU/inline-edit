@@ -173,12 +173,12 @@ function changed(row = null) {
 	lists.forEach(list => list.markEmpty(editing.value))
 	touch()
 	if (row?.isConnected) {
+		row.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 		flash(row)
 	}
 }
 
-function flash(row) {
-	row.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+export function flash(row) {
 	row.removeAttribute('data-sd-flash')
 	// Restart the animation if it's already running.
 	void row.offsetWidth

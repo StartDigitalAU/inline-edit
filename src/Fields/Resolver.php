@@ -155,7 +155,7 @@ final class Resolver
 
 		$key = acf_get_reference($name, $acf_post_id);
 		$field = is_string($key) && str_starts_with($key, 'field_') ? acf_get_field($key) : null;
-		$field = $field ?: $this->virtual->find($name);
+		$field = $field ?: $this->virtual->find($name) ?: $this->fromRow($name, $acf_post_id);
 
 		if (!$field && is_int($acf_post_id)) {
 			$field = acf_maybe_get_field($name, $acf_post_id);
@@ -176,6 +176,44 @@ final class Resolver
 		$field['name'] = $name;
 
 		return $field;
+	}
+
+	/**
+	 * A sub field with nothing saved yet (e.g. one added to a layout after its rows were), found from
+	 * the row it's in: `page_builder_2_columns` is the `columns` field of row 2 of `page_builder`.
+	 */
+	private function fromRow(string $name, int|string $acf_post_id): ?array
+	{
+		preg_match_all('/_(\d+)_/', $name, $matches, PREG_OFFSET_CAPTURE);
+
+		// The last row number is the innermost row, e.g. a card's in `page_builder_0_cards_2_title`.
+		foreach (array_reverse($matches[0]) as [$match, $offset]) {
+			$list = $this->acf(substr($name, 0, $offset), $acf_post_id, self::LIST_TYPES);
+			$fields = $list ? $this->rowFields($list, $acf_post_id, (int) trim($match, '_')) : [];
+			$rest = substr($name, $offset + strlen($match));
+
+			foreach ($fields as $sub) {
+				if ($sub['name'] === $rest) {
+					return $sub;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * The fields of a stored row: its layout's for flexible content, the repeater's otherwise.
+	 */
+	private function rowFields(array $list, int|string $acf_post_id, int $index): array
+	{
+		if ($list['type'] !== 'flexible_content') {
+			return $list['sub_fields'] ?? [];
+		}
+		$layouts = acf_get_metadata($acf_post_id, $list['name']);
+		$fields = is_array($layouts) && isset($layouts[$index]) ? $this->rows->fields($list, (string) $layouts[$index]) : [];
+
+		return is_array($fields) ? $fields : [];
 	}
 
 	/**

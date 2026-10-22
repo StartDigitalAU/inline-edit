@@ -5,6 +5,7 @@ import { listenToPage } from './events/page'
 import { lists, regions, register } from './model/page'
 import { findDraft, keepDrafts } from './services/drafts'
 import { startEditing } from './services/editing'
+import { outlineWasOpen, toggleOutline } from './services/outline'
 import { wasEditing } from './services/session'
 import { App } from './ui/App'
 
@@ -24,6 +25,9 @@ function boot() {
 
 	if (wasEditing()) {
 		startEditing()
+	}
+	if (outlineWasOpen()) {
+		toggleOutline(true)
 	}
 	keepDrafts()
 	findDraft()

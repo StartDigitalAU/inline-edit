@@ -12,6 +12,7 @@ import { ImageDrop } from './components/ImageDrop'
 import { ImageTools } from './components/ImageTools'
 import { FormatBar } from './components/FormatBar'
 import { LockedTip } from './components/LockedTip'
+import { OutlinePanel } from './components/outline/OutlinePanel'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { ShortcutsSheet } from './components/ShortcutsSheet'
 import { Tooltip } from './components/Tooltip'
@@ -33,6 +34,7 @@ export function App({ root }) {
 			<ImageDrop />
 			<FocusEditor />
 			<LockedTip />
+			<OutlinePanel />
 			<SettingsPanel />
 			<FormatBar />
 			<PresenceNotice />

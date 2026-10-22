@@ -4,7 +4,8 @@ import { pending } from '../../services/changes'
 import { discardChanges, toggleEditing } from '../../services/editing'
 import { history, redo, undo } from '../../services/history'
 import { save } from '../../services/saving'
-import { busy, editing, menuOpen, picker, saving } from '../../state/signals'
+import { toggleOutline } from '../../services/outline'
+import { busy, editing, menuOpen, outlineOpen, picker, saving } from '../../state/signals'
 import { pageList } from '../pageList'
 import { Button } from './Button'
 import { Icon } from './Icon'
@@ -91,6 +92,19 @@ function EditingActions({ menuButton }) {
 				Save
 			</Button>
 			<Separator />
+			{list && (
+				<Button
+					variant="ghost"
+					size="icon"
+					aria-label="Blocks"
+					aria-expanded={outlineOpen.value ? 'true' : 'false'}
+					tip="Blocks"
+					keys={['B']}
+					onClick={() => toggleOutline()}
+				>
+					<Icon name="blocks" />
+				</Button>
+			)}
 			<Button variant="ghost" size="icon" aria-label="Preview on a phone or tablet" tip="Preview on a phone or tablet" onClick={() => openDevicePreview()}>
 				<Icon name="phone" />
 			</Button>

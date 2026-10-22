@@ -24,12 +24,15 @@ export function SettingsPanel() {
 
 function Panel({ list, row }) {
 	revision.value
-	const [failed, setFailed] = useState(false)
 	const settings = settingsOf(row)
+	const [state, setState] = useState(settings.length ? 'ready' : 'loading')
 
 	useEffect(() => {
-		if (!settings.length) {
-			loadSettings(list, row).catch(() => setFailed(true))
+		if (state === 'loading') {
+			loadSettings(list, row).then(
+				() => setState('ready'),
+				() => setState('failed')
+			)
 		}
 	}, [list])
 
@@ -56,8 +59,9 @@ function Panel({ list, row }) {
 				</Button>
 			</div>
 			<div class="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain p-3.5">
-				{failed && <p class="text-[13px] text-danger-text">The settings couldn’t load. Try again.</p>}
-				{!failed && !settings.length && <Loading />}
+				{state === 'loading' && <Loading />}
+				{state === 'failed' && <p class="text-[13px] text-danger-text">The settings couldn’t load. Try again.</p>}
+				{state === 'ready' && !settings.length && <p class="text-[13px] text-subtle">This block has no settings.</p>}
 				{settings.map(setting => (
 					<SettingField key={setting.name} setting={setting} onChange={value => changeSetting(list, setting, value)} />
 				))}

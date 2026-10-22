@@ -29,6 +29,8 @@ export const hoveredRow = signal(null)
 
 export const menuOpen = signal(false)
 export const shortcutsOpen = signal(false)
+/** Whether the Blocks outline is open. */
+export const outlineOpen = signal(false)
 /** The block whose settings panel is open: { list, row }. */
 export const settingsFor = signal(null)
 /** Choosing a block to add: { list, index }. */

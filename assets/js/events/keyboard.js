@@ -3,6 +3,7 @@ import { regionFor } from '../model/page'
 import { devicePreview, editing, focusing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
 import { finishFocus } from '../services/focus'
 import { toggleEditing } from '../services/editing'
+import { toggleOutline } from '../services/outline'
 import { redo, undo } from '../services/history'
 import { save } from '../services/saving'
 import { restoreSelection, setBlock } from '../services/formatting'
@@ -24,6 +25,11 @@ export function listenToKeyboard() {
 			if (event.key.toLowerCase() === 'e' && !event.repeat) {
 				event.preventDefault()
 				toggleEditing()
+				return
+			}
+			if (event.key.toLowerCase() === 'b' && editing.value && !event.repeat) {
+				event.preventDefault()
+				toggleOutline()
 				return
 			}
 			if (event.key === '?') {

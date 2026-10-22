@@ -13,10 +13,10 @@ const SKETCHES = {
 /**
  * A small sketch of a block layout, guessed from the kinds of fields it has.
  */
-export function LayoutGlyph({ fields }) {
+export function LayoutGlyph({ fields, class: className = 'h-8 w-12' }) {
 	return (
 		<svg
-			class="h-8 w-12"
+			class={className}
 			viewBox="0 0 48 32"
 			aria-hidden="true"
 			fill="none"
