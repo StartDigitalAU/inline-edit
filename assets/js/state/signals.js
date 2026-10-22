@@ -49,6 +49,8 @@ export const focusing = signal(null)
 export const dropTarget = signal(null)
 /** Images being uploaded: [{ el, progress }], progress from 0 to 1. */
 export const uploads = signal([])
+/** Previewing the page at a device's width: { device, html }, or null. */
+export const devicePreview = signal(null)
 /** While the media library is open, the editor's UI steps aside. */
 export const mediaOpen = signal(false)
 

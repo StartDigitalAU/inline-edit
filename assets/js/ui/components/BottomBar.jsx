@@ -9,6 +9,7 @@ import { pageList } from '../pageList'
 import { Button } from './Button'
 import { Icon } from './Icon'
 import { Kbd } from './Kbd'
+import { openDevicePreview } from './DevicePreview'
 import { PageMenu } from './PageMenu'
 import { Separator } from './Separator'
 import { Status } from './Status'
@@ -84,6 +85,9 @@ function EditingActions() {
 				Save
 			</Button>
 			<Separator />
+			<Button variant="ghost" size="icon" aria-label="Preview on a phone or tablet" tip="Preview on a phone or tablet" onClick={() => openDevicePreview()}>
+				<Icon name="phone" />
+			</Button>
 			<Button
 				buttonRef={menuButton}
 				variant="ghost"

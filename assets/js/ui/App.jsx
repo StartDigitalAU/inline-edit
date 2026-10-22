@@ -2,6 +2,7 @@ import { mediaOpen } from '../state/signals'
 import { BlockControls } from './components/BlockControls'
 import { BlockPicker } from './components/BlockPicker'
 import { BottomBar } from './components/BottomBar'
+import { DevicePreview } from './components/DevicePreview'
 import { DragLayer } from './components/DragLayer'
 import { DraftsToast } from './components/DraftsToast'
 import { FieldLabel } from './components/FieldLabel'
@@ -38,6 +39,7 @@ export function App({ root }) {
 			<BottomBar />
 			<DragLayer />
 			<BlockPicker />
+			<DevicePreview />
 			<ShortcutsSheet />
 			<Tooltip root={root} />
 		</>

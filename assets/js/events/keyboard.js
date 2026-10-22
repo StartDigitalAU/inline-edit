@@ -1,6 +1,6 @@
 import { BLOCKS } from '../config'
 import { regionFor } from '../model/page'
-import { editing, focusing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
+import { devicePreview, editing, focusing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
 import { finishFocus } from '../services/focus'
 import { toggleEditing } from '../services/editing'
 import { redo, undo } from '../services/history'
@@ -89,6 +89,7 @@ function fieldKeys(event, region, mod) {
  */
 function closeTopmost() {
 	const closable = [
+		[devicePreview, null],
 		[picker, null],
 		[focusing, null],
 		[settingsFor, null],
