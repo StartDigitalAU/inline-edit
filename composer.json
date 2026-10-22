@@ -2,9 +2,20 @@
     "name": "thestart/inline-edit",
     "description": "Front-end editing for Timber and ACF sites: change text and images on the page, and add, move and remove page builder blocks.",
     "type": "library",
+    "keywords": [
+        "wordpress",
+        "timber",
+        "acf",
+        "page-builder",
+        "inline-editing"
+    ],
+    "homepage": "https://github.com/StartDigitalAU/inline-edit",
     "license": "MIT",
     "require": {
         "php": ">=8.1"
+    },
+    "suggest": {
+        "timber/timber": "Front-end editing renders with Timber 2 (required)."
     },
     "autoload": {
         "psr-4": {
