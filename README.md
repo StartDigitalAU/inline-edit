@@ -72,7 +72,7 @@ Keep an editable element's content on the same line as its tag (a formatter brea
 </div>
 ```
 
-`rows_of()` gives each row its real field prefix. Don't count with `loop.index0`: blocks hidden with ACF Extended aren't in the loop but keep their place, so counting would give every block after one the wrong field names.
+`rows_of()` gives each row its real field prefix. Don't count with `loop.index0`: hidden blocks aren't in the loop but keep their place, so counting would give every block after one the wrong field names.
 
 The row template gets `row` (also as `block`), `field_prefix` (the row's own prefix, e.g. `page_builder_2_`) and `post`. Repeaters inside blocks work the same way, e.g. `editable_rows(post, field_prefix ~ 'cards', 'partials/card.twig')`. Without a template, rows can still be moved, duplicated and deleted, but not added, and settings can't be changed.
 
@@ -86,7 +86,7 @@ Select a block and press `⌘C` (or **Copy** in its toolbar), then on any page p
 
 ## Hidden blocks
 
-With ACF Extended's **toggle** action on the field, blocks can be hidden from visitors without deleting them, from the block toolbar or the Blocks panel. Hidden blocks show as a slim bar while editing. This uses ACF Extended's own flag, so blocks hidden in the admin show as hidden here and the other way round (before ACF 6.5; ACF 6.5's own disabled layouts aren't supported yet).
+Blocks can be hidden from visitors without deleting them, from the block toolbar or the Blocks panel. Hidden blocks show as a slim bar while editing. This uses the same flag as the admin, so blocks hidden there show as hidden here and the other way round: ACF's own **Disable layout** from ACF 6.5, or before that, ACF Extended's **toggle** action on the field. Moving blocks keeps each one's hidden flag and renamed label with it.
 
 ## Draft pages
 
@@ -128,6 +128,30 @@ Unsaved changes are stored per person and page (user meta) a moment after each c
 - **How it works:** the server applies the draft inside a database transaction, using the same checks as a save made by you. It renders the page from those values, then rolls the transaction back, so nothing is ever saved.
 - **When it's available:** only when the posts, postmeta and options tables are InnoDB and there's no persistent object cache.
 - **Preview pages:** they're never cached or indexed, and never show the editor.
+
+## Site scripts
+
+The editor puts new markup on the page when a block is added, duplicated, shown again or re-rendered with changed settings, and when saving swaps in the saved blocks. The site's own scripts (carousels, accordions, scroll animations) only ran on the page as it loaded, so the editor tells them with DOM events:
+
+| Event | On | When |
+| --- | --- | --- |
+| `inline-edit:render` | the new element (bubbles) | New markup is on the page. `event.detail.reason` is `add`, `duplicate`, `rerender`, `show`, `save` or `restore`. |
+| `inline-edit:change` | `document` | Blocks were added, moved, removed or re-rendered, so what's below them may have moved (e.g. call `ScrollTrigger.refresh()`). |
+| `inline-edit:start`, `inline-edit:stop` | `document` | Edit mode turned on or off (e.g. pause autoplay). |
+
+Set up what's inside `event.target`, not the whole page, so nothing is set up twice:
+
+```js
+const setUp = root => {
+	initCarousels(root)
+	animateOnScroll(root)
+}
+
+document.addEventListener('DOMContentLoaded', () => setUp(document))
+document.addEventListener('inline-edit:render', event => setUp(event.target))
+```
+
+A duplicated block is a copy of the block's element as it is, so it can carry markup a script added when it set the original up (e.g. a carousel's classes and inline styles). Scripts should set it up anyway; anything they keep on the element itself (like `el.swiper`) isn't copied.
 
 ## Hooks
 

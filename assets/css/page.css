@@ -4,7 +4,8 @@
 	--sd-ring: 50 145 255;
 	outline: 1px dashed rgb(var(--sd-ring) / 0.6);
 	outline-offset: 6px;
-	border-radius: 2px;
+	/* No border-radius here: the outline follows the element's own corners, and setting one would
+	   square off the site's rounded buttons and images while editing. */
 	cursor: text;
 	transition:
 		outline-color 0.15s ease,

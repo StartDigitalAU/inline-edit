@@ -51,7 +51,7 @@ final class TwigFunctions
 	 * A flexible content field's rows to loop over, each as `{ row, prefix }`: the row's values, and
 	 * the prefix of its fields' names (`page_builder_2_`).
 	 *
-	 * Use this rather than counting with `loop.index0`: blocks hidden with ACF Extended aren't in the
+	 * Use this rather than counting with `loop.index0`: hidden blocks aren't in the
 	 * loop but still have their place, so counting would give the rows after one the wrong names.
 	 *
 	 *   {% for item in rows_of(post, 'page_builder') %}

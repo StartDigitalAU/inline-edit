@@ -1,6 +1,7 @@
 import { liveRegions, forget, register, savedName } from '../model/page'
 import { editing } from '../state/signals'
 import { animate } from './motion'
+import { layoutChanged, rendered } from './site'
 
 /**
  * After a save that changed blocks, every field after the change has a new name. Rather than reload,
@@ -21,12 +22,19 @@ export async function swapInSavedLists(changedLists) {
 		return false
 	}
 
+	const swapped = []
 	await animate(
 		() => {
-			targets.forEach(({ list }, i) => replaceList(list, document.importNode(fresh[i], true), page.config))
+			targets.forEach(({ list }, i) => {
+				const el = document.importNode(fresh[i], true)
+				replaceList(list, el, page.config)
+				swapped.push(el)
+			})
 		},
 		{ rows: targets.flatMap(({ list }) => list.rows()) }
 	)
+	swapped.forEach(el => rendered(el, 'save'))
+	layoutChanged()
 	return true
 }
 

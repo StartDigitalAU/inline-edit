@@ -8,6 +8,7 @@ import { withoutDrafts } from './drafts'
 import { clearHistory } from './history'
 import { rerenderRow } from './rerender'
 import { loadSettings } from './settings'
+import { layoutChanged, rendered } from './site'
 
 /**
  * Bring back a draft (see services/drafts.js) on a freshly loaded page: rows first, outermost lists
@@ -68,15 +69,26 @@ async function reorder(list, order) {
 	const loaded = new Map(list.rows().map(row => [rowInfo(row).origin.from, row]))
 	const used = new Set()
 	const rows = []
+	const fresh = []
 
+	// New and copied rows are markup the site's scripts haven't seen yet.
 	for (const item of order) {
 		if ('layout' in item) {
-			rows.push(await createRow(list, item.layout))
+			const row = await createRow(list, item.layout)
+			rows.push(row)
+			fresh.push(row)
 			continue
 		}
 		const row = loaded.get(item.from)
-		if (row) {
-			rows.push(used.has(row) ? copyRow(row) : row)
+		if (!row) {
+			continue
+		}
+		if (used.has(row)) {
+			const copy = copyRow(row)
+			rows.push(copy)
+			fresh.push(copy)
+		} else {
+			rows.push(row)
 			used.add(row)
 		}
 	}
@@ -86,6 +98,8 @@ async function reorder(list, order) {
 		.forEach(row => row.remove())
 	rows.forEach(row => list.el.append(row))
 	list.markEmpty(editing.value)
+	fresh.forEach(row => rendered(row, 'restore'))
+	layoutChanged()
 }
 
 async function restoreSettings(entries, skip) {

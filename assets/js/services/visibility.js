@@ -6,6 +6,7 @@ import { describeError } from './api'
 import { record } from './history'
 import { animate } from './motion'
 import { isStored, renderRow, toElement } from './previews'
+import { layoutChanged, rendered } from './site'
 
 /**
  * Hiding a block from visitors without deleting it (ACF Extended's toggle), and showing it again.
@@ -31,6 +32,7 @@ async function hideRow(list, row) {
 }
 
 async function showRow(list, placeholder) {
+	const isNew = !shownElements.has(placeholder)
 	const row = shownElements.get(placeholder) || (await renderHidden(list, placeholder))
 	if (!row) {
 		return
@@ -38,6 +40,9 @@ async function showRow(list, placeholder) {
 	setRowInfo(row, { ...rowInfo(placeholder), hidden: false })
 	shownElements.set(placeholder, row)
 	await swap(list, placeholder, row)
+	if (isNew) {
+		rendered(row, 'show')
+	}
 	record({
 		label: `Show ${list.rowLabel(row)}`,
 		undo: () => swap(list, row, placeholder),
@@ -68,4 +73,5 @@ async function swap(list, from, to) {
 	await animate(() => from.replaceWith(to), { rows: [from], added: () => [to] })
 	list.markEmpty(editing.value)
 	touch()
+	layoutChanged()
 }

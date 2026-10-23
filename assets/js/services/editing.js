@@ -22,6 +22,7 @@ import { discardDraft, withoutDrafts } from './drafts'
 import { restoreDraft } from './restore'
 import { startPresence, stopPresence } from './presence'
 import { rememberEditing, reloadEditing } from './session'
+import { editingChanged } from './site'
 
 /**
  * Turning edit mode on and off, and throwing changes away.
@@ -38,6 +39,9 @@ export function startEditing() {
 		// Not supported everywhere, and only affects tidiness.
 	}
 
+	// First, so the site can undo what its scripts did to the page (e.g. text split into words) before
+	// fields are made editable.
+	editingChanged(true)
 	document.documentElement.classList.add('sd-inline-editing')
 	regions.forEach(region => region.activate())
 	editing.value = true
@@ -74,6 +78,7 @@ export function stopEditing() {
 	regions.forEach(region => region.deactivate())
 	lists.forEach(list => list.markEmpty(false))
 	touch()
+	editingChanged(false)
 }
 
 export function toggleEditing() {

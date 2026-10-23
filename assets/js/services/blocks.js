@@ -6,6 +6,7 @@ import { describeError } from './api'
 import { record } from './history'
 import { animate } from './motion'
 import { fetchCopy, takePreview, toElement } from './previews'
+import { layoutChanged, rendered } from './site'
 
 /**
  * Adding, moving, duplicating and deleting rows. Each changes the page straight away, animated and
@@ -25,7 +26,7 @@ export function moveRow(list, row, to) {
 	return place(list, row, to)
 }
 
-export function duplicateRow(list, row) {
+export async function duplicateRow(list, row) {
 	if (!list.canDuplicate(row)) {
 		return
 	}
@@ -36,7 +37,8 @@ export function duplicateRow(list, row) {
 		undo: () => take(list, copy),
 		redo: () => place(list, copy, index),
 	})
-	return place(list, copy, index)
+	await place(list, copy, index)
+	rendered(copy, 'duplicate')
 }
 
 export function deleteRow(list, row) {
@@ -82,6 +84,7 @@ export async function addRow(list, index, layout = '', copy = null) {
 			redo: () => place(list, row, at),
 		})
 		clearStatus()
+		rendered(row, 'add')
 		changed(row)
 	} catch (error) {
 		placeholder.remove()
@@ -173,6 +176,7 @@ function changed(row = null) {
 	hoveredRow.value = null
 	lists.forEach(list => list.markEmpty(editing.value))
 	touch()
+	layoutChanged()
 	if (row?.isConnected) {
 		row.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 		flash(row)

@@ -129,8 +129,9 @@ final class RowList implements Versioned
 			return $limits;
 		}
 
-		acf_update_value($rows, $this->postId, $this->acf);
-		HiddenRows::write($this, $rows, $this->hiddenPositions($order, $wasHidden));
+		$hidden = $this->hiddenPositions($order, $wasHidden);
+		acf_update_value(HiddenRows::prepare($this, $rows, $hidden, $order), $this->postId, $this->acf);
+		HiddenRows::write($this, $rows, $hidden);
 
 		return true;
 	}

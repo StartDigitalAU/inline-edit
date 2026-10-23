@@ -5,6 +5,7 @@ import { setStatus } from '../state/status'
 import { describeError } from './api'
 import { animate } from './motion'
 import { isStored, renderRow, toElement } from './previews'
+import { layoutChanged, rendered } from './site'
 
 /**
  * Show a row with its current settings, rendered again by the server with the list's row template.
@@ -72,6 +73,8 @@ async function rerender(list, row) {
 		settingsFor.value = { list, row: fresh }
 	}
 	touch()
+	rendered(fresh, 'rerender')
+	layoutChanged()
 }
 
 /**
