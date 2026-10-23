@@ -6,6 +6,7 @@ use TheStartLabs\InlineEdit\Fields\Field;
 use TheStartLabs\InlineEdit\Fields\Resolver;
 use TheStartLabs\InlineEdit\Fingerprint;
 use TheStartLabs\InlineEdit\Images\FocusPoints;
+use TheStartLabs\InlineEdit\Rows\RowSource;
 use TheStartLabs\InlineEdit\Versioned;
 use WP_Error;
 
@@ -25,7 +26,10 @@ final class ChangeWriter
 	/** Fields on the page and in blocks' settings panels. */
 	private const FIELD_TYPES = [...Resolver::FIELD_TYPES, ...Resolver::SETTING_TYPES];
 
-	public function __construct(private Resolver $resolver) {}
+	public function __construct(
+		private Resolver $resolver,
+		private RowSource $sources,
+	) {}
 
 	public function check(ChangeSet $set, SaveErrors $errors): void
 	{
@@ -63,7 +67,8 @@ final class ChangeWriter
 	{
 		foreach ($set->lists as $item) {
 			$list = $this->resolver->list($this->resolver->target($item['post']), $item['field']);
-			$result = is_wp_error($list) ? $list : $list->reorder($item['rows']);
+			$rows = is_wp_error($list) ? $list : $this->withCopies($item['rows'], $list->acf);
+			$result = is_wp_error($rows) ? $rows : $list->reorder($rows);
 			if (is_wp_error($result)) {
 				$errors->add($item['id'], $result);
 
@@ -89,6 +94,24 @@ final class ChangeWriter
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * Pasted rows name the saved row they're copied from; read it (see Rows\RowSource).
+	 */
+	private function withCopies(array $rows, array $acf): array|WP_Error
+	{
+		foreach ($rows as $i => $item) {
+			if (isset($item['source'])) {
+				$raw = $this->sources->raw($item['source'], $acf);
+				if (is_wp_error($raw)) {
+					return $raw;
+				}
+				$rows[$i] = ['copy' => $raw, 'hidden' => !empty($item['hidden'])];
+			}
+		}
+
+		return $rows;
 	}
 
 	public function saveFocusPoints(ChangeSet $set): void

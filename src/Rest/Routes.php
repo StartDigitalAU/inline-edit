@@ -23,6 +23,7 @@ final class Routes
 		private DraftController $draft,
 		private ShareController $share,
 		private PageController $pages,
+		private ChoicesController $choices,
 	) {}
 
 	public function register(): void
@@ -67,6 +68,8 @@ final class Routes
 							'layout' => $this->layout(),
 							// Hidden from visitors (ACF Extended's toggle).
 							'hidden' => ['type' => 'boolean'],
+							// ...or a copy of a saved row, from this page or another.
+							'source' => $this->source(),
 						]),
 					],
 				]),
@@ -136,6 +139,17 @@ final class Routes
 			'args' => ['title' => ['type' => 'string', 'default' => '', 'maxLength' => 200]],
 		]);
 
+		register_rest_route(Plugin::REST_NAMESPACE, '/choices', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->choices, 'handle'],
+			'permission_callback' => $canEdit,
+			'args' => $this->row() + [
+				// The setting's name in its row, e.g. `related_posts` or `cta_page`.
+				'name' => $this->name(true),
+				'search' => ['type' => 'string', 'default' => '', 'maxLength' => 200],
+			],
+		]);
+
 		register_rest_route(Plugin::REST_NAMESPACE, '/settings', [
 			'methods' => WP_REST_Server::CREATABLE,
 			'callback' => [$this->settings, 'handle'],
@@ -157,6 +171,8 @@ final class Routes
 			'index' => ['type' => 'integer', 'required' => true, 'minimum' => 0],
 			// Whether the row is saved (or only exists in the editor so far).
 			'stored' => ['type' => 'boolean', 'default' => false],
+			// A pasted row: the saved row it's copied from.
+			'source' => $this->source(),
 			// Unsaved rows this one sits in, so a card can be added to a block that's also new.
 			'parents' => $this->listOf(
 				[
@@ -167,6 +183,16 @@ final class Routes
 				20,
 			),
 		];
+	}
+
+	/** Where a copied block comes from: its page, its list, and its position. */
+	private function source(): array
+	{
+		return $this->object([
+			'post' => $this->post(),
+			'field' => $this->name(true),
+			'index' => ['type' => 'integer', 'required' => true, 'minimum' => 0],
+		]);
 	}
 
 	private function listOf(array $properties, int $max = self::MAX_ITEMS): array

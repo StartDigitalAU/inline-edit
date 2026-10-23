@@ -2,9 +2,11 @@
 
 namespace TheStartLabs\InlineEdit\Rest;
 
+use TheStartLabs\InlineEdit\Fields\FieldTree;
 use TheStartLabs\InlineEdit\Fields\Resolver;
 use TheStartLabs\InlineEdit\Fields\VirtualRows;
 use TheStartLabs\InlineEdit\Rows\RowFactory;
+use TheStartLabs\InlineEdit\Rows\RowSource;
 use WP_Error;
 use WP_Post;
 use WP_REST_Request;
@@ -25,6 +27,7 @@ final class RowRequest
 		public readonly string $prefix,
 		public readonly array $fields,
 		public readonly bool $stored,
+		private ?array $copy = null,
 	) {}
 
 	public static function from(
@@ -32,6 +35,7 @@ final class RowRequest
 		Resolver $resolver,
 		RowFactory $rows,
 		VirtualRows $virtual,
+		?RowSource $sources = null,
 	): self|WP_Error {
 		$invalid = new WP_Error('sd_inline_edit_invalid', __('That block can’t be changed here.'), ['status' => 400]);
 
@@ -65,7 +69,29 @@ final class RowRequest
 			$virtual->add($prefix, $fields);
 		}
 
-		return new self($post, $list, $request['layout'], $prefix, $fields, $stored);
+		// A pasted row, which shows the values of the saved row it's copied from.
+		$copy = null;
+		if ($sources && is_array($request['source'])) {
+			$copy = $sources->raw($request['source'], $list);
+			if (is_wp_error($copy)) {
+				return $copy;
+			}
+		}
+
+		return new self($post, $list, $request['layout'], $prefix, $fields, $stored, $copy);
+	}
+
+	public function isCopy(): bool
+	{
+		return $this->copy !== null;
+	}
+
+	/**
+	 * A field's value in the block a pasted row is copied from, by its name relative to the row.
+	 */
+	public function copied(string $name): mixed
+	{
+		return $this->copy === null ? null : FieldTree::rawAt($this->fields, $this->copy, $name);
 	}
 
 	/**
@@ -73,6 +99,9 @@ final class RowRequest
 	 */
 	public function rawValues(RowFactory $rows): array|WP_Error
 	{
+		if ($this->copy !== null) {
+			return $this->copy;
+		}
 		if (!$this->stored) {
 			return $rows->create($this->list, $this->layout);
 		}

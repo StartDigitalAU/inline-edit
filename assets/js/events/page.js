@@ -1,4 +1,5 @@
 import { lists, regionFor, rowAt } from '../model/page'
+import { rowInfo } from '../model/rows'
 import {
 	activeField,
 	dropTarget,
@@ -11,6 +12,7 @@ import {
 	menuOpen,
 	picker,
 	saving,
+	settingsFocus,
 	settingsFor,
 	viewport,
 } from '../state/signals'
@@ -144,17 +146,39 @@ export function listenToPage(host) {
 	})
 }
 
+/**
+ * A gallery on the page is edited in its block's settings: open them, at the gallery.
+ */
+function openGallery(event, field) {
+	const found = rowAt(field.el)
+	event.preventDefault()
+	event.stopPropagation()
+	if (found) {
+		settingsFocus.value = savedSuffix(field.region.field, found)
+		settingsFor.value = { list: found.list, row: found.row }
+	}
+}
+
+/** A field's name within its row (`gallery`, `cta_images`). */
+function savedSuffix(name, { list, row }) {
+	const prefix = `${list.field}_${rowInfo(row).index}_`
+	return name.startsWith(prefix) ? name.slice(prefix.length) : name
+}
+
 function onClick(event, fieldAt, fromEditor) {
 	if (!editing.value || fromEditor(event)) {
 		return
 	}
 	menuOpen.value = false
-	settingsFor.value = null
 	// Dropdowns close on a click elsewhere; the link field stays open until it's done with.
 	if (formatPanel.value !== 'link') {
 		formatPanel.value = ''
 	}
 
+	// A click inside an open settings panel's block stays in it (e.g. a gallery that opened it).
+	if (!settingsFor.value?.row.contains(event.target)) {
+		settingsFor.value = null
+	}
 	// An empty list is one big "Add a block" button.
 	const emptyList = lists.find(list => list.el === event.target && list.el.hasAttribute('data-sd-empty'))
 	if (emptyList) {
@@ -177,6 +201,8 @@ function onClick(event, fieldAt, fromEditor) {
 	} else if (field?.region.kind === 'link') {
 		event.preventDefault()
 		openLinkEditor(field.region, field.el)
+	} else if (field?.region.kind === 'gallery') {
+		openGallery(event, field)
 	} else if (field && (!field.region.isEditable || event.target.closest('a'))) {
 		// Links inside editable text are for editing, not following.
 		event.preventDefault()

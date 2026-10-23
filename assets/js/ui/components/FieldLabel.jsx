@@ -34,8 +34,8 @@ function Label({ region, el }) {
 	})
 
 	const tone = region.error ? 'error' : region.dirty ? 'dirty' : ''
-	const icon = { image: 'image', link: 'link', locked: 'lock' }[region.kind] || 'text'
-	const hints = { image: 'Click to replace', link: 'Click to edit', locked: 'Locked' }
+	const icon = { image: 'image', gallery: 'image', link: 'link', locked: 'lock' }[region.kind] || 'text'
+	const hints = { image: 'Click to replace', gallery: 'Click to edit', link: 'Click to edit', locked: 'Locked' }
 	const hint = region.dirty ? 'Edited' : hints[region.kind] || ''
 
 	return (

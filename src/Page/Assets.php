@@ -55,6 +55,7 @@ final class Assets
 			'endpoint' => rest_url(Plugin::REST_NAMESPACE . '/save'),
 			'previewEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/preview'),
 			'settingsEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/settings'),
+			'choicesEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/choices'),
 			'presenceEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/presence'),
 			'draftEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/draft'),
 			'shareEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/share'),

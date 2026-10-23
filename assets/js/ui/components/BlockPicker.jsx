@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import { addRow } from '../../services/blocks'
+import { pasteable, pasteRow } from '../../services/clipboard'
 import { prefetchPreview } from '../../services/previews'
 import { picker } from '../../state/signals'
 import { Kbd } from './Kbd'
@@ -98,6 +99,7 @@ function Picker({ list, index }) {
 					/>
 					<Kbd keys={['Esc']} />
 				</div>
+				<PasteOption list={list} index={index} onDone={close} />
 				<div
 					id="picker-list"
 					role="listbox"
@@ -214,6 +216,34 @@ function LayoutRow({ layout, full, highlighted, onHover, onChoose }) {
 				<span class={`truncate text-[13px] ${full ? 'text-amber' : 'text-subtle'}`}>
 					{full ? `Limit of ${layout.max} reached` : fields}
 				</span>
+			</span>
+		</button>
+	)
+}
+
+/**
+ * The block copied with Copy (from this page or another), if it can go here.
+ */
+function PasteOption({ list, index, onDone }) {
+	const copy = pasteable(list)
+	if (!copy) {
+		return null
+	}
+	return (
+		<button
+			type="button"
+			class="mx-1.5 mt-1.5 flex shrink-0 items-center gap-3 rounded-[10px] p-2 text-left shadow-[inset_0_0_0_1px_theme(colors.line)] hover:bg-hover"
+			onClick={() => {
+				onDone()
+				pasteRow(list, index)
+			}}
+		>
+			<span class="grid h-11 w-16 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent-light">
+				<Icon name="clipboard" />
+			</span>
+			<span class="flex min-w-0 flex-col gap-0.5">
+				<span class="font-medium">Paste {copy.label}</span>
+				<span class="truncate text-[13px] text-subtle">{copy.from ? `Copied from ${copy.from}` : 'The block you copied'}</span>
 			</span>
 		</button>
 	)

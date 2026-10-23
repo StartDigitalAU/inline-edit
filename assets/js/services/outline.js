@@ -1,5 +1,4 @@
 import { lists, rowAt } from '../model/page'
-import { rowInfo } from '../model/rows'
 import { outlineOpen } from '../state/signals'
 import { flash } from './blocks'
 
@@ -21,12 +20,9 @@ export function rowSummary(row) {
 	return heading?.textContent.trim().replace(/\s+/g, ' ') || ''
 }
 
-/** Rows that only exist on the page so far. */
-export function isNewRow(row) {
-	return 'layout' in rowInfo(row).origin
-}
-
 /** The row in the middle of the screen, which the outline marks as where you are. */
+export { isNewRow } from '../model/rows'
+
 export function rowInView(list) {
 	const middle = window.innerHeight / 2
 	return (

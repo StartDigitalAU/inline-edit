@@ -39,6 +39,14 @@ export function loadSettings(list, row) {
 }
 
 /**
+ * Posts, pages or terms a setting can hold, matching what's typed (see src/Rest/ChoicesController.php).
+ */
+export async function searchChoices(list, row, setting, search) {
+	const { choices } = await post(config.choicesEndpoint, { ...rowRequest(list, row), name: setting.name, search })
+	return choices
+}
+
+/**
  * Change a setting and show it on the page, undoably.
  */
 export async function changeSetting(list, setting, value) {

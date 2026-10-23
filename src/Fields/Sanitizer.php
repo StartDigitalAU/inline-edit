@@ -27,6 +27,10 @@ final class Sanitizer
 			'email' => self::email(trim($value)),
 			'color_picker' => self::color(trim($value)),
 			'link' => self::link($value),
+			'gallery' => self::gallery($value),
+			'file' => self::attachment(trim($value), false),
+			'post_object', 'page_link', 'relationship' => self::posts($field, $value),
+			'taxonomy' => self::terms($field, $value),
 			'image' => self::image($field, trim($value)),
 			'wysiwyg' => self::html(trim($value)),
 			'textarea' => self::text(trim($value)),
@@ -98,6 +102,92 @@ final class Sanitizer
 			'title' => sanitize_text_field((string) ($link['title'] ?? '')),
 			'target' => ($link['target'] ?? '') === '_blank' ? '_blank' : '',
 		];
+	}
+
+	/**
+	 * A gallery arrives as JSON: a list of attachment IDs, in order.
+	 */
+	private static function gallery(string $value): array|WP_Error
+	{
+		$ids = [];
+		foreach (self::ids($value) as $id) {
+			$checked = self::attachment((string) $id, true);
+			if (is_wp_error($checked)) {
+				return $checked;
+			}
+			$ids[] = $checked;
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * An attachment the user may use (an image, if `$image`), or '' for none.
+	 */
+	private static function attachment(string $value, bool $image): int|string|WP_Error
+	{
+		if ($value === '' || $value === '0') {
+			return '';
+		}
+		$attachment = preg_match('/^[1-9][0-9]{0,19}$/D', $value) ? get_post((int) $value) : null;
+		if (
+			!$attachment ||
+			$attachment->post_type !== 'attachment' ||
+			($image && !wp_attachment_is_image($attachment)) ||
+			!current_user_can('read_post', $attachment->ID)
+		) {
+			return self::invalid($image ? __('Choose images from the media library.') : __('Choose a file from the media library.'));
+		}
+
+		return $attachment->ID;
+	}
+
+	/**
+	 * Posts (as IDs) the field allows: its post types, and ones the user can read.
+	 */
+	private static function posts(Field $field, string $value): array|int|string|WP_Error
+	{
+		$allowed = array_filter((array) ($field->acf['post_type'] ?? []));
+		$ids = [];
+		foreach (self::ids($value) as $id) {
+			$post = get_post($id);
+			if (!$post || ($allowed && !in_array($post->post_type, $allowed, true)) || !current_user_can('read_post', $post->ID)) {
+				return self::invalid(__('Choose from the list.'));
+			}
+			$ids[] = $post->ID;
+		}
+
+		return SettingControl::isMultiple($field) ? $ids : $ids[0] ?? '';
+	}
+
+	/**
+	 * Terms (as IDs) from the field's taxonomy.
+	 */
+	private static function terms(Field $field, string $value): array|int|string|WP_Error
+	{
+		$ids = [];
+		foreach (self::ids($value) as $id) {
+			$term = get_term($id, (string) ($field->acf['taxonomy'] ?? ''));
+			if (!$term || is_wp_error($term)) {
+				return self::invalid(__('Choose from the list.'));
+			}
+			$ids[] = $term->term_id;
+		}
+
+		return SettingControl::isMultiple($field) ? $ids : $ids[0] ?? '';
+	}
+
+	/**
+	 * IDs from a JSON list or a single ID.
+	 *
+	 * @return int[]
+	 */
+	private static function ids(string $value): array
+	{
+		$decoded = json_decode($value, true);
+		$ids = is_array($decoded) ? $decoded : ($value === '' ? [] : [$value]);
+
+		return array_values(array_filter(array_map('intval', $ids), fn($id) => $id > 0));
 	}
 
 	private static function invalid(string $message): WP_Error

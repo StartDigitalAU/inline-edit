@@ -13,8 +13,11 @@ use WP_Post;
  */
 final class Resolver
 {
-	/** Fields edited right on the page, marked with `editable()`. */
-	public const FIELD_TYPES = ['text', 'textarea', 'wysiwyg', 'image', 'link'];
+	/**
+	 * Fields edited right on the page, marked with `editable()`. A gallery's element opens its
+	 * block's settings, where it's edited.
+	 */
+	public const FIELD_TYPES = ['text', 'textarea', 'wysiwyg', 'image', 'link', 'gallery'];
 
 	/** Fields edited in a block's settings panel, as they have nothing to click on the page. */
 	public const SETTING_TYPES = [
@@ -28,6 +31,12 @@ final class Resolver
 		'email',
 		'link',
 		'color_picker',
+		'gallery',
+		'file',
+		'post_object',
+		'page_link',
+		'relationship',
+		'taxonomy',
 	];
 
 	public const LIST_TYPES = ['flexible_content', 'repeater'];
@@ -161,7 +170,8 @@ final class Resolver
 			$field = $this->fromFieldGroups($name, $acf_post_id);
 		}
 
-		if (!$field || !in_array($field['type'], $types, true) || !empty($field['multiple'])) {
+		// Multi-selects aren't offered (a select is one choice); multiple posts or terms are.
+		if (!$field || !in_array($field['type'], $types, true) || ($field['type'] === 'select' && !empty($field['multiple']))) {
 			return null;
 		}
 
@@ -205,12 +215,9 @@ final class Resolver
 		foreach (array_reverse($matches[0]) as [$match, $offset]) {
 			$list = $this->acf(substr($name, 0, $offset), $acf_post_id, self::LIST_TYPES);
 			$fields = $list ? $this->rowFields($list, $acf_post_id, (int) trim($match, '_')) : [];
-			$rest = substr($name, $offset + strlen($match));
-
-			foreach ($fields as $sub) {
-				if ($sub['name'] === $rest) {
-					return $sub;
-				}
+			$found = FieldTree::find($fields, substr($name, $offset + strlen($match)));
+			if ($found) {
+				return $found;
 			}
 		}
 

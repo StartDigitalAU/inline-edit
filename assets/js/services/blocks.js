@@ -5,7 +5,7 @@ import { clearStatus, setStatus } from '../state/status'
 import { describeError } from './api'
 import { record } from './history'
 import { animate } from './motion'
-import { takePreview, toElement } from './previews'
+import { fetchCopy, takePreview, toElement } from './previews'
 
 /**
  * Adding, moving, duplicating and deleting rows. Each changes the page straight away, animated and
@@ -56,10 +56,11 @@ export function deleteRow(list, row) {
 }
 
 /**
- * Add a new row of `layout` at `index`. A placeholder shows straight away while the server renders
- * it (often already done: the block picker fetches previews ahead).
+ * Add a new row of `layout` at `index`, or a copy of a saved row (`copy`, see services/clipboard.js).
+ * A placeholder shows straight away while the server renders it (often already done: the block
+ * picker fetches previews ahead).
  */
-export async function addRow(list, index, layout = '') {
+export async function addRow(list, index, layout = '', copy = null) {
 	if (busy.value || !list.canAdd()) {
 		return
 	}
@@ -72,7 +73,7 @@ export async function addRow(list, index, layout = '') {
 	})
 
 	try {
-		const row = await createRow(list, layout)
+		const row = await createRow(list, layout, copy)
 		await animate(() => placeholder.replaceWith(row), { rows: [placeholder], added: () => [row] })
 		const at = list.indexOf(row)
 		record({
@@ -94,10 +95,10 @@ export async function addRow(list, index, layout = '') {
 /**
  * A new row of `layout`, rendered by the server and ready to put on the page, with its fields known.
  */
-export async function createRow(list, layout) {
-	const { preview, index } = await takePreview(list, layout)
+export async function createRow(list, layout, copy = null) {
+	const { preview, index } = copy ? await fetchCopy(list, copy) : await takePreview(list, layout)
 	const row = toElement(preview.html)
-	setRowInfo(row, { index, origin: { layout }, layout })
+	setRowInfo(row, { index, origin: copy ? { source: copy.source } : { layout }, layout })
 	const added = register(row, preview, { isNew: true })
 	if (editing.value) {
 		added.regions.forEach(region => region.activate())

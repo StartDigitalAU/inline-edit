@@ -35,6 +35,8 @@ export const outlineOpen = signal(false)
 export const settingsFor = signal(null)
 /** Starting a new page (the title dialog is open). */
 export const newPageOpen = signal(false)
+/** A setting to bring into view when the settings panel opens (its name), e.g. a gallery clicked on the page. */
+export const settingsFocus = signal('')
 /** Choosing a block to add: { list, index }. */
 export const picker = signal(null)
 /** The element whose tooltip is showing. */

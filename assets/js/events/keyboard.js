@@ -1,7 +1,9 @@
 import { BLOCKS } from '../config'
 import { regionFor } from '../model/page'
-import { devicePreview, editing, newPageOpen, focusing, linkEditing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
+import { devicePreview, editing, hoveredRow, newPageOpen, focusing, linkEditing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
+import { canCopy, copyRow, pasteable, pasteRow } from '../services/clipboard'
 import { finishFocus } from '../services/focus'
+import { pageList } from '../ui/pageList'
 import { closeLinkEditor, openLinkEditor } from '../services/linkFields'
 import { toggleEditing } from '../services/editing'
 import { toggleOutline } from '../services/outline'
@@ -50,6 +52,14 @@ export function listenToKeyboard() {
 			return
 		}
 
+		// Copy the block under the pointer, or paste after it, when there's no text to copy or paste.
+		if (mod && !isTyping(event) && ['c', 'v'].includes(event.key.toLowerCase()) && !document.getSelection()?.toString()) {
+			if (blockShortcut(event.key.toLowerCase())) {
+				event.preventDefault()
+				return
+			}
+		}
+
 		// In a text field, the browser's own undo handles typing.
 		if (mod && !isTyping(event) && (event.key.toLowerCase() === 'z' || event.key.toLowerCase() === 'y')) {
 			event.preventDefault()
@@ -69,7 +79,12 @@ function fieldKeys(event, region, mod) {
 	const key = event.key.toLowerCase()
 	const el = event.target.closest('[data-sd-edit]')
 
-	if (region.kind === 'image' || region.kind === 'link') {
+	if (region.kind === 'gallery') {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault()
+			el.click()
+		}
+	} else if (region.kind === 'image' || region.kind === 'link') {
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault()
 			region.kind === 'image' ? openMediaLibrary(region, el) : openLinkEditor(region, el)
@@ -89,6 +104,27 @@ function fieldKeys(event, region, mod) {
 		// Plain text fields have no formatting to apply.
 		event.preventDefault()
 	}
+}
+
+/**
+ * ⌘C copies the hovered block; ⌘V pastes after it (or at the end of the page). Returns whether it
+ * did anything.
+ */
+function blockShortcut(key) {
+	const hovered = hoveredRow.value
+	if (key === 'c') {
+		if (hovered && canCopy(hovered.list, hovered.row)) {
+			copyRow(hovered.list, hovered.row)
+			return true
+		}
+		return false
+	}
+	const list = hovered?.list.isFlexible ? hovered.list : pageList()
+	if (!list || !pasteable(list)) {
+		return false
+	}
+	pasteRow(list, hovered?.list === list ? list.indexOf(hovered.row) + 1 : list.rows().length)
+	return true
 }
 
 /**

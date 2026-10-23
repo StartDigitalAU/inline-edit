@@ -13,6 +13,10 @@ use WP_Error;
  */
 final class Field implements Versioned
 {
+	/** A value to use instead of what's stored (see withRaw()). */
+	private mixed $override = null;
+	private bool $overridden = false;
+
 	public function __construct(
 		public readonly int|string $postId,
 		public readonly string $name,
@@ -20,6 +24,19 @@ final class Field implements Versioned
 		public readonly ?array $acf,
 		public readonly string $editUrl,
 	) {}
+
+	/**
+	 * The same field, as if it held `$raw`: for a pasted block, whose values come from the block it
+	 * was copied from until it's saved.
+	 */
+	public function withRaw(mixed $raw): self
+	{
+		$copy = clone $this;
+		$copy->override = $raw;
+		$copy->overridden = true;
+
+		return $copy;
+	}
 
 	public function isTitle(): bool
 	{
@@ -42,6 +59,10 @@ final class Field implements Versioned
 	 */
 	public function raw(): mixed
 	{
+		if ($this->overridden) {
+			return $this->override;
+		}
+
 		return $this->isTitle()
 			? get_post_field('post_title', $this->postId, 'raw')
 			: acf_get_value($this->postId, $this->acf);
@@ -65,6 +86,11 @@ final class Field implements Versioned
 
 		if ($this->acf && (!empty($this->acf['readonly']) || !empty($this->acf['disabled']))) {
 			return $locked('readonly');
+		}
+
+		// A gallery's element on the page opens its block's settings, where it's edited.
+		if ($this->type === 'gallery') {
+			return ['kind' => 'gallery', 'source' => '', 'reason' => ''];
 		}
 
 		// A link can be on the page (its <a> marked with editable()) or in a block's settings.

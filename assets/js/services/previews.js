@@ -1,6 +1,6 @@
 import { config } from '../config'
 import { rowsAround } from '../model/page'
-import { rowInfo, temporaryIndex } from '../model/rows'
+import { isNewRow, rowInfo, temporaryIndex } from '../model/rows'
 import { post } from './api'
 
 /**
@@ -42,6 +42,21 @@ async function fetchPreview(list, layout) {
 }
 
 /**
+ * A new row copied from a saved one (see services/clipboard.js), rendered with its values.
+ */
+export async function fetchCopy(list, copy) {
+	const index = temporaryIndex()
+	const preview = await post(config.previewEndpoint, {
+		...listRequest(list),
+		layout: copy.layout,
+		index,
+		stored: false,
+		source: copy.source,
+	})
+	return { preview, index }
+}
+
+/**
  * Render an existing row again, e.g. with changed settings (`values`, by sub field name).
  */
 export function renderRow(list, row, values) {
@@ -58,6 +73,7 @@ export function rowRequest(list, row) {
 		layout: info.layout,
 		index: info.index,
 		stored: isStored(list, row),
+		...(info.origin.source ? { source: info.origin.source } : {}),
 	}
 }
 
@@ -92,7 +108,7 @@ function listRequest(list) {
  */
 export function unsavedParents(list) {
 	return rowsAround(list.el)
-		.filter(({ row }) => 'layout' in rowInfo(row).origin)
+		.filter(({ row }) => isNewRow(row))
 		.map(({ list: parent, row }) => ({
 			key: parent.key,
 			prefix: `${parent.field}_${rowInfo(row).index}_`,

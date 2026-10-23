@@ -5,7 +5,9 @@ let lastId = 0
  * changed in the block's settings panel. Like a Region it's saved by name with everything else, and
  * its name moves with its row (see savedName()).
  *
- * `value` is a boolean, number, string or { url, title, target } link, as the panel shows it.
+ * `value` is as the panel shows it: a boolean, number or string; a { url, title, target } link;
+ * a { id, filename } file; { id, url } images (a gallery); or { id, text } posts or terms (a list
+ * when the field takes several).
  */
 export class Setting {
 	constructor(data, { post, row, isNew }) {
@@ -25,6 +27,10 @@ export class Setting {
 		this.placeholder = data.placeholder
 		this.prepend = data.prepend
 		this.append = data.append
+		this.multiple = data.multiple
+		this.mimeTypes = data.mimeTypes
+		// The layout's tab or group it's under, which the panel shows as a heading.
+		this.section = data.section || ''
 		this.base = data.base
 
 		// The stored name, or null for a setting of a row that hasn't been saved yet.
@@ -58,12 +64,18 @@ export class Setting {
 	}
 }
 
+const ID_TYPES = ['gallery', 'file', 'post_object', 'page_link', 'relationship', 'taxonomy']
+
 function serialize(type, value) {
 	if (type === 'true_false') {
 		return value ? '1' : '0'
 	}
 	if (type === 'link') {
 		return value?.url ? JSON.stringify(value) : ''
+	}
+	// Attachments, posts and terms go as IDs: a list of them, or one.
+	if (ID_TYPES.includes(type)) {
+		return Array.isArray(value) ? JSON.stringify(value.map(item => item.id)) : value?.id ? String(value.id) : ''
 	}
 	return value === null || value === undefined ? '' : String(value)
 }

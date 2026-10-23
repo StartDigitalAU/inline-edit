@@ -11,6 +11,35 @@ import { record } from './history'
 const frames = new Map()
 
 /**
+ * Choose attachments from the media library (images for a gallery, any file for a file field).
+ * `onPick` gets them as { id, url, alt, filename }, url being a thumbnail for images.
+ */
+export function openMediaPicker({ title, multiple, type }, onPick) {
+	const media = window.wp?.media
+	if (!media) {
+		setStatus('error', 'The media library couldn’t load. Reload the page and try again.')
+		return
+	}
+	const frame = media({
+		title,
+		multiple: multiple ? 'add' : false,
+		library: type ? { type: type.split(',').map(kind => kind.trim()) } : {},
+		button: { text: multiple ? 'Add' : 'Choose' },
+	})
+	frame.on('open', () => (mediaOpen.value = true))
+	frame.on('close', () => (mediaOpen.value = false))
+	frame.on('select', () => {
+		const picked = frame.state().get('selection').toJSON()
+		onPick(
+			picked
+				.filter(item => item?.id && isHttpUrl(item.url))
+				.map(item => ({ id: item.id, url: item.sizes?.thumbnail?.url || item.url, alt: item.alt || '', filename: item.filename || '' }))
+		)
+	})
+	frame.open()
+}
+
+/**
  * Show a new image in a field, undoably.
  */
 export function replaceImage(region, attachment) {

@@ -25,11 +25,9 @@ final class VirtualRows
 			if (!str_starts_with($name, $row['prefix'])) {
 				continue;
 			}
-			$rest = substr($name, strlen($row['prefix']));
-			foreach ($row['fields'] as $sub) {
-				if ($sub['name'] === $rest) {
-					return $sub;
-				}
+			$found = FieldTree::find($row['fields'], substr($name, strlen($row['prefix'])));
+			if ($found) {
+				return $found;
 			}
 		}
 

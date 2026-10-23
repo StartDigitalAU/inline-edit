@@ -10,8 +10,9 @@ Front-end editing for Timber and ACF sites. Logged-in editors press **Edit page*
   - Set an image's focus point on the page.
 - **Blocks:**
   - Add, move (with the arrows or by dragging), duplicate, hide and delete page builder blocks and repeater rows such as cards.
+  - Copy a block and paste it on another page (`⌘C` / `⌘V`, or the block toolbar and picker).
   - A block picker with thumbnails.
-  - A settings panel for the fields with nothing to click on the page: toggles, selects, numbers, links and colours.
+  - A settings panel for the fields with nothing to click on the page: toggles, selects, numbers, links, colours, galleries, files and post, page and category pickers, in sections following the field group's tabs and groups.
 - **Undo and redo** for every change. Everything animates into place.
 - **Phone and tablet previews** of the page as it is right now, unsaved changes included.
 - **Nothing is published until Save:**
@@ -75,7 +76,13 @@ Keep an editable element's content on the same line as its tag (a formatter brea
 
 The row template gets `row` (also as `block`), `field_prefix` (the row's own prefix, e.g. `page_builder_2_`) and `post`. Repeaters inside blocks work the same way, e.g. `editable_rows(post, field_prefix ~ 'cards', 'partials/card.twig')`. Without a template, rows can still be moved, duplicated and deleted, but not added, and settings can't be changed.
 
-A block's true/false, select, radio, button group, number, range, URL, email, link and colour fields show in its settings panel automatically (links that are already editable on the page aren't repeated there).
+A block's true/false, select, radio, button group, number, range, URL, email, link, colour, gallery, file, post object, page link, relationship and taxonomy fields show in its settings panel automatically (links that are already editable on the page aren't repeated there). Fields inside groups are included too, and the panel is split into sections by the field group's tabs and groups. Post and term pickers search with ACF's own query, so the field's post type and taxonomy limits apply.
+
+Galleries can be marked with `editable()` too. Clicking one opens the block's settings at the gallery, where images can be added, dragged into order and removed; the block re-renders with the change before it's saved.
+
+## Copy and paste blocks
+
+Select a block and press `⌘C` (or **Copy** in its toolbar), then on any page press `⌘V` or pick **Paste** in the block picker. The pasted block is the copied block's saved version, all of its fields included, and it's staged like any new block until Save. Blocks paste only into a list with the same field (e.g. any page's `page_builder`), and only for editors who can read the page it came from.
 
 ## Hidden blocks
 

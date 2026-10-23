@@ -85,6 +85,10 @@ export class Region {
 		if (this.kind === 'link') {
 			return serializeLink(this.value)
 		}
+		// Edited in the block's settings (see Setting), so never changed here.
+		if (this.kind === 'gallery') {
+			return ''
+		}
 		if (this.kind === 'rich') {
 			return richHtml(el)
 		}
@@ -118,7 +122,7 @@ export class Region {
 			el.setAttribute('data-sd-kind', this.kind)
 			el.setAttribute('aria-label', this.label)
 
-			if (this.kind === 'image' || this.kind === 'link') {
+			if (['image', 'link', 'gallery'].includes(this.kind)) {
 				el.setAttribute('role', 'button')
 				el.setAttribute('tabindex', '0')
 				el.setAttribute('aria-label', `${this.kind === 'image' ? 'Replace' : 'Edit'} ${this.label.toLowerCase()}`)
@@ -239,6 +243,9 @@ export class Region {
 		if (this.kind === 'image') {
 			return imageState(el)
 		}
+		if (this.kind === 'gallery') {
+			return null
+		}
 		return this.kind === 'link' ? linkState(el) : el.innerHTML
 	}
 
@@ -247,7 +254,7 @@ export class Region {
 			applyImage(el, loaded)
 		} else if (this.kind === 'link') {
 			restoreLink(el, loaded)
-		} else if (this.isEditable) {
+		} else if (this.isEditable && this.kind !== 'gallery') {
 			el.innerHTML = loaded
 		}
 	}

@@ -22,7 +22,7 @@ export async function uploadImage(region, el, file) {
 	}
 
 	try {
-		const media = await send(file, region.uploadedTo, progress)
+		const media = await uploadFile(file, region.uploadedTo, progress)
 		replaceImage(region, { id: media.id, url: media.source_url, alt: media.alt_text || '' })
 	} catch (error) {
 		setStatus('error', error.message)
@@ -32,9 +32,10 @@ export async function uploadImage(region, el, file) {
 }
 
 /**
- * Post the file to the REST API's media endpoint, reporting progress (which fetch() can't).
+ * Upload a file to the media library (attached to a post, optionally), reporting progress (which
+ * fetch() can't). Resolves with the REST API's attachment.
  */
-function send(file, attachTo, onProgress) {
+export function uploadFile(file, attachTo = null, onProgress = () => {}) {
 	return new Promise((resolve, reject) => {
 		const url = new URL(config.mediaEndpoint, location.href)
 		if (attachTo) {

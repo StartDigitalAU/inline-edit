@@ -1,5 +1,7 @@
 import { useState } from 'preact/hooks'
 import { deleteRow, duplicateRow, moveRow } from '../../services/blocks'
+import { MOD } from '../../config'
+import { canCopy, copyRow } from '../../services/clipboard'
 import { startDrag } from '../../services/drag'
 import { toggleHidden } from '../../services/visibility'
 import { hasSettings } from '../../services/settings'
@@ -138,6 +140,11 @@ function Toolbar({ list, row, horizontal }) {
 					onClick={() => toggleHidden(list, row)}
 				>
 					<Icon name={list.isHidden(row) ? 'eye' : 'eyeOff'} />
+				</Button>
+			)}
+			{list.isFlexible && (
+				<Button variant="ghost" size="icon-sm" tip="Copy, to paste here or on another page" keys={[MOD, 'C']} disabled={!canCopy(list, row)} onClick={() => copyRow(list, row)}>
+					<Icon name="clipboard" />
 				</Button>
 			)}
 			<Button variant="ghost" size="icon-sm" tip="Duplicate" disabled={!list.canDuplicate(row)} onClick={() => duplicateRow(list, row)}>

@@ -12,6 +12,7 @@ use TheStartLabs\InlineEdit\Posts\DraftPages;
 use TheStartLabs\InlineEdit\Posts\PostUpdater;
 use TheStartLabs\InlineEdit\Preview\SharedPreview;
 use TheStartLabs\InlineEdit\Preview\ShareLinks;
+use TheStartLabs\InlineEdit\Rest\ChoicesController;
 use TheStartLabs\InlineEdit\Rest\DraftController;
 use TheStartLabs\InlineEdit\Rest\PageController;
 use TheStartLabs\InlineEdit\Rest\PresenceController;
@@ -21,6 +22,7 @@ use TheStartLabs\InlineEdit\Rest\SaveController;
 use TheStartLabs\InlineEdit\Rest\SettingsController;
 use TheStartLabs\InlineEdit\Rest\ShareController;
 use TheStartLabs\InlineEdit\Rows\RowFactory;
+use TheStartLabs\InlineEdit\Rows\RowSource;
 use TheStartLabs\InlineEdit\Rows\TemplateSigner;
 use TheStartLabs\InlineEdit\Saving\ChangeWriter;
 
@@ -67,7 +69,8 @@ final class Plugin
 		$resolver = new Resolver($virtual, $rows);
 		$signer = new TemplateSigner();
 		$registry = new Registry($resolver, $signer);
-		$writer = new ChangeWriter($resolver);
+		$sources = new RowSource($resolver);
+		$writer = new ChangeWriter($resolver, $sources);
 		$drafts = new DraftStore();
 		$links = new ShareLinks();
 
@@ -76,12 +79,13 @@ final class Plugin
 		$preview = new SharedPreview($resolver, $writer, $drafts, $links);
 		$routes = new Routes(
 			new SaveController($resolver, $writer, new PostUpdater()),
-			new PreviewController($resolver, $virtual, $rows, $signer, $registry, $access),
-			new SettingsController($resolver, $virtual, $rows),
+			new PreviewController($resolver, $virtual, $rows, $signer, $registry, $access, $sources),
+			new SettingsController($resolver, $virtual, $rows, $sources),
 			new PresenceController($resolver),
 			new DraftController($resolver, $drafts),
 			new ShareController($resolver, $links),
 			new PageController($resolver),
+			new ChoicesController($resolver, $virtual, $rows),
 		);
 
 		add_filter('timber/twig/functions', [$twig, 'register']);

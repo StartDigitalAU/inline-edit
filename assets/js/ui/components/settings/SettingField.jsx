@@ -1,4 +1,7 @@
 import { Choice } from './Choice'
+import { ChoiceSearch } from './ChoiceSearch'
+import { FileInput } from './FileInput'
+import { GalleryInput } from './GalleryInput'
 import { ColorInput } from './ColorInput'
 import { LinkInput } from './LinkInput'
 import { NumberInput } from './NumberInput'
@@ -15,12 +18,18 @@ const CONTROLS = {
 	email: TextInput,
 	link: LinkInput,
 	color_picker: ColorInput,
+	gallery: GalleryInput,
+	file: FileInput,
+	post_object: ChoiceSearch,
+	page_link: ChoiceSearch,
+	relationship: ChoiceSearch,
+	taxonomy: ChoiceSearch,
 }
 
 /**
  * One setting: its label, help text, and the control for its type.
  */
-export function SettingField({ setting, onChange }) {
+export function SettingField({ setting, list, row, onChange }) {
 	if (setting.type === 'true_false') {
 		return (
 			<label class="flex items-center justify-between gap-4 py-1">
@@ -32,9 +41,9 @@ export function SettingField({ setting, onChange }) {
 
 	const Control = CONTROLS[setting.type]
 	return (
-		<div class="flex flex-col gap-2">
+		<div class="flex flex-col gap-2" data-setting={setting.name}>
 			<SettingLabel setting={setting} />
-			{Control && <Control setting={setting} onChange={onChange} />}
+			{Control && <Control setting={setting} list={list} row={row} onChange={onChange} />}
 		</div>
 	)
 }

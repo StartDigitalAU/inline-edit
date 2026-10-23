@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { regions, settingsOf } from '../../../model/page'
 import { changeSetting, loadSettings } from '../../../services/settings'
-import { editing, revision, settingsFor } from '../../../state/signals'
+import { editing, revision, settingsFocus, settingsFor } from '../../../state/signals'
 import { clamp, useFloating } from '../../hooks/useFloating'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
@@ -24,10 +24,21 @@ export function SettingsPanel() {
 
 function Panel({ list, row }) {
 	revision.value
-	// A field already editable on the page (e.g. a button's link) is edited there, not here too.
-	const onPage = new Set(regions.filter(region => region.isConnected).map(region => region.field))
+	// A link already editable on the page (a button) is edited there, not here too.
+	const onPage = new Set(regions.filter(region => region.isConnected && region.kind === 'link').map(region => region.field))
 	const settings = settingsOf(row).filter(setting => !onPage.has(setting.field))
 	const [state, setState] = useState(settings.length ? 'ready' : 'loading')
+
+	// Bring a setting into view (a gallery clicked on the page), once the settings are there.
+	const body = useRef(null)
+	useEffect(() => {
+		const name = settingsFocus.value
+		const target = name && state === 'ready' && body.current?.querySelector(`[data-setting="${CSS.escape(name)}"]`)
+		if (target) {
+			target.scrollIntoView({ block: 'nearest' })
+			settingsFocus.value = ''
+		}
+	})
 
 	useEffect(() => {
 		if (state === 'loading') {
@@ -60,16 +71,41 @@ function Panel({ list, row }) {
 					<Icon name="close" />
 				</Button>
 			</div>
-			<div class="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain p-3.5">
+			<div ref={body} class="flex min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain p-3.5">
 				{state === 'loading' && <Loading />}
 				{state === 'failed' && <p class="text-[13px] text-danger-text">The settings couldn’t load. Try again.</p>}
 				{state === 'ready' && !settings.length && <p class="text-[13px] text-subtle">This block has no settings.</p>}
-				{settings.map(setting => (
-					<SettingField key={setting.name} setting={setting} onChange={value => changeSetting(list, setting, value)} />
+				{sections(settings).map(({ title, settings: inSection }) => (
+					<section key={title} class="flex flex-col gap-4">
+						{title && <h3 class="-mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{title}</h3>}
+						{inSection.map(setting => (
+							<SettingField
+								key={setting.name}
+								setting={setting}
+								list={list}
+								row={row}
+								onChange={value => changeSetting(list, setting, value)}
+							/>
+						))}
+					</section>
 				))}
 			</div>
 		</div>
 	)
+}
+
+/**
+ * Settings under their headings (the layout's tabs and groups), in order.
+ */
+function sections(settings) {
+	const found = []
+	for (const setting of settings) {
+		if (found.at(-1)?.title !== setting.section) {
+			found.push({ title: setting.section, settings: [] })
+		}
+		found.at(-1).settings.push(setting)
+	}
+	return found
 }
 
 function Loading() {

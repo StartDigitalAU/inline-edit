@@ -104,9 +104,9 @@ final class RowList implements Versioned
 	}
 
 	/**
-	 * Write a new order of rows. Each entry is ['from' => index of an existing row] or
-	 * ['layout' => layout of a new row] ('' for a repeater), and can say whether it's `hidden`
-	 * (an existing row keeps its own setting unless it says).
+	 * Write a new order of rows. Each entry is ['from' => index of an existing row],
+	 * ['layout' => layout of a new row] ('' for a repeater) or ['copy' => a row's raw values], and
+	 * can say whether it's `hidden` (an existing row keeps its own setting unless it says).
 	 */
 	public function reorder(array $order): true|WP_Error
 	{
@@ -153,6 +153,9 @@ final class RowList implements Versioned
 
 	private function row(array $item, array $current): array|WP_Error
 	{
+		if (isset($item['copy'])) {
+			return $item['copy'];
+		}
 		if (isset($item['from']) === isset($item['layout'])) {
 			return $this->invalid(__('These blocks can’t be changed here.'));
 		}

@@ -8,6 +8,7 @@ const SHORTCUTS = [
 	['Start or stop editing', [['E']]],
 	['Save changes', [[MOD, 'S']]],
 	['Show or hide blocks', [['B']]],
+	['Copy / paste a block', [[MOD, 'C'], [MOD, 'V']]],
 	['Move a block in the outline', [['⌥', '↑'], ['⌥', '↓']]],
 	['Undo / redo', [[MOD, 'Z'], [MOD, '⇧', 'Z']]],
 	['Paragraph / heading 1–6', [[MOD, ALT, '0–6']]],
