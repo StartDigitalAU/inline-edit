@@ -1,4 +1,4 @@
-# thestart/inline-edit
+# thestartlabs/inline-edit
 
 Front-end editing for Timber and ACF sites. Logged-in editors press **Edit page** (or `E`) and change the page right where it is.
 
@@ -23,7 +23,7 @@ For anyone who can't edit the page, including all logged-out visitors, nothing i
 ## Install
 
 ```bash
-composer require thestart/inline-edit
+composer require thestartlabs/inline-edit
 ```
 
 Composer's autoloader boots the package. Your theme must load `vendor/autoload.php` and use Timber 2 and ACF Pro. Saving and previews need PHP 8.1+.

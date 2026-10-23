@@ -1,5 +1,5 @@
 {
-    "name": "thestart/inline-edit",
+    "name": "thestartlabs/inline-edit",
     "description": "Front-end editing for Timber and ACF sites: change text and images on the page, and add, move and remove page builder blocks.",
     "type": "library",
     "keywords": [

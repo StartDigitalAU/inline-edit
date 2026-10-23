@@ -1,5 +1,5 @@
 {
-  "name": "@thestart/inline-edit",
+  "name": "@thestartlabs/inline-edit",
   "private": true,
   "description": "Builds the editor's dist/ files. Only needed to work on the package, not to use it.",
   "scripts": {
