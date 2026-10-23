@@ -14,7 +14,6 @@ import {
 	saving,
 	settingsFocus,
 	settingsFor,
-	viewport,
 } from '../state/signals'
 import { pending } from '../services/changes'
 import { draftPending } from '../services/drafts'
@@ -23,13 +22,17 @@ import { forgetSelection, rememberSelection } from '../services/formatting'
 import { closeLinkEditor, openLinkEditor } from '../services/linkFields'
 import { openMediaLibrary } from '../services/media'
 import { uploadImage } from '../services/upload'
+import { repositionAll } from '../ui/hooks/useFloating'
+import { isEditorHost } from '../ui/layers'
+
+// How long after the last scroll it counts as settled.
+const SCROLL_SETTLE = 120
 
 /**
  * Listeners on the page itself: typing into fields, hovering fields and blocks, clicking images.
- * `host` is the editor's own UI, which events from inside it are retargeted to.
  */
-export function listenToPage(host) {
-	const fromEditor = event => event.composedPath().includes(host)
+export function listenToPage() {
+	const fromEditor = event => event.composedPath().some(isEditorHost)
 	const fieldAt = target => {
 		const region = editing.value ? regionFor(target) : null
 		return region ? { region, el: target.closest('[data-sd-edit]') } : null
@@ -85,13 +88,39 @@ export function listenToPage(host) {
 		}
 	})
 
+	// While scrolling, blocks pass under a still pointer. Rather than the controls hopping from block
+	// to block every frame, hovering waits until the scrolling settles.
+	let scrolling = 0
+	let held = null
+	const hover = target => {
+		hoveredField.value = fieldAt(target)
+		hoveredRow.value = rowAt(target)
+	}
 	document.addEventListener('mouseover', event => {
+		held = null
 		if (!editing.value || fromEditor(event)) {
 			return
 		}
-		hoveredField.value = fieldAt(event.target)
-		hoveredRow.value = rowAt(event.target)
+		if (scrolling) {
+			held = event.target
+			return
+		}
+		hover(event.target)
 	})
+	window.addEventListener(
+		'scroll',
+		() => {
+			clearTimeout(scrolling)
+			scrolling = setTimeout(() => {
+				scrolling = 0
+				if (held && editing.value) {
+					hover(held)
+				}
+				held = null
+			}, SCROLL_SETTLE)
+		},
+		{ passive: true },
+	)
 	document.documentElement.addEventListener('mouseleave', () => {
 		hoveredField.value = null
 		hoveredRow.value = null
@@ -113,12 +142,12 @@ export function listenToPage(host) {
 
 	document.addEventListener('focusout', event => {
 		// Focus moving into the editor's UI (e.g. the link field) keeps the field active.
-		if (!editing.value || event.relatedTarget === host || fieldAt(event.relatedTarget)?.el === activeField.value?.el) {
+		if (!editing.value || isEditorHost(event.relatedTarget) || fieldAt(event.relatedTarget)?.el === activeField.value?.el) {
 			return
 		}
 		setTimeout(() => {
 			const el = activeField.value?.el
-			if (document.activeElement !== host && !el?.contains(document.activeElement)) {
+			if (!isEditorHost(document.activeElement) && !el?.contains(document.activeElement)) {
 				activeField.value = null
 				formatPanel.value = ''
 			}
@@ -133,9 +162,8 @@ export function listenToPage(host) {
 
 	document.addEventListener('click', event => onClick(event, fieldAt, fromEditor), true)
 
-	const reposition = () => viewport.value++
-	window.addEventListener('scroll', reposition, { passive: true })
-	window.addEventListener('resize', reposition)
+	window.addEventListener('scroll', repositionAll, { passive: true })
+	window.addEventListener('resize', repositionAll)
 
 	// Unsaved changes are kept as a draft, so leaving only warns if the latest aren't kept yet.
 	window.addEventListener('beforeunload', event => {

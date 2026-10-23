@@ -20,8 +20,7 @@ export function ImageDrop() {
 function Cover({ el, label, progress }) {
 	const ref = useFloating(() => {
 		const rect = el.getBoundingClientRect()
-		Object.assign(ref.current.style, { width: `${rect.width}px`, height: `${rect.height}px` })
-		return { left: rect.left, top: rect.top }
+		return { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
 	})
 	const uploading = progress !== undefined
 

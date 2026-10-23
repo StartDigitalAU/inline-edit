@@ -3,7 +3,8 @@ import { useFloating } from '../hooks/useFloating'
 import { Icon } from './Icon'
 
 /**
- * While dragging a row: its name following the pointer, and a line where it will land.
+ * While dragging a row: its name following the pointer. Where it will land is shown by DropLine,
+ * on the page's layer.
  */
 export function DragLayer() {
 	const drag = dragging.value
@@ -12,10 +13,15 @@ export function DragLayer() {
 	}
 	return (
 		<div class="pointer-events-auto absolute inset-0 cursor-grabbing">
-			<DropLine {...drag} />
 			<Chip {...drag} />
 		</div>
 	)
+}
+
+/** A line where the dragged row will land. */
+export function DropLine() {
+	const drag = dragging.value
+	return drag ? <Line {...drag} /> : null
 }
 
 function Chip({ label, x, y }) {
@@ -31,7 +37,7 @@ function Chip({ label, x, y }) {
 	)
 }
 
-function DropLine({ list, row, index, horizontal }) {
+function Line({ list, row, index, horizontal }) {
 	const others = list.rows().filter(other => other !== row)
 	const ref = useFloating(() => {
 		const before = others[index]?.getBoundingClientRect()
@@ -40,15 +46,10 @@ function DropLine({ list, row, index, horizontal }) {
 		if (!rect) {
 			return null
 		}
-		const style = ref.current.style
 		if (horizontal) {
-			style.width = '3px'
-			style.height = `${rect.height}px`
-			return { left: (before ? rect.left - 12 : rect.right + 12) - 1.5, top: rect.top }
+			return { left: (before ? rect.left - 12 : rect.right + 12) - 1.5, top: rect.top, width: 3, height: rect.height }
 		}
-		style.width = `${rect.width}px`
-		style.height = '3px'
-		return { left: rect.left, top: (before ? rect.top : rect.bottom) - 1.5 }
+		return { left: rect.left, top: (before ? rect.top : rect.bottom) - 1.5, width: rect.width, height: 3 }
 	})
 	return (
 		<div

@@ -69,8 +69,7 @@ function Controls({ list, row }) {
 function Outline({ row }) {
 	const ref = useFloating(() => {
 		const rect = row.getBoundingClientRect()
-		Object.assign(ref.current.style, { width: `${rect.width}px`, height: `${rect.height}px` })
-		return { left: rect.left, top: rect.top }
+		return { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
 	})
 	return (
 		<div
@@ -215,12 +214,9 @@ function InsertButton({ row, edge, horizontal, tip, onHover, onClick }) {
 function InsertLine({ row, edge, horizontal }) {
 	const ref = useFloating(() => {
 		const rect = row.getBoundingClientRect()
-		const style = ref.current.style
-		style.width = horizontal ? '2px' : `${rect.width}px`
-		style.height = horizontal ? `${rect.height}px` : '2px'
 		const x = horizontal ? (edge === 'before' ? rect.left : rect.right) - 1 : rect.left
 		const y = horizontal ? rect.top : (edge === 'before' ? rect.top : rect.bottom) - 1
-		return { left: x, top: y }
+		return { left: x, top: y, width: horizontal ? 2 : rect.width, height: horizontal ? rect.height : 2 }
 	})
 	return (
 		<div ref={ref} class="pointer-events-none absolute left-0 top-0 rounded-sm bg-accent shadow-[0_0_0_3px_rgb(0_112_243/0.2)]" />

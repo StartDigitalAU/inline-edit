@@ -7,7 +7,8 @@ import { findDraft, keepDrafts } from './services/drafts'
 import { startEditing } from './services/editing'
 import { outlineWasOpen, toggleOutline } from './services/outline'
 import { wasEditing } from './services/session'
-import { App } from './ui/App'
+import { PageLayer, ScreenLayer } from './ui/App'
+import { layers } from './ui/layers'
 
 /**
  * Inline Edit: front-end editing for what templates marked with `editable()` and `editable_rows()`.
@@ -19,8 +20,8 @@ function boot() {
 		return
 	}
 
-	const host = mount()
-	listenToPage(host)
+	mount()
+	listenToPage()
 	listenToKeyboard()
 
 	if (wasEditing()) {
@@ -34,12 +35,22 @@ function boot() {
 }
 
 /**
- * The UI lives in a shadow root, so the page's styles can't reach it and its styles can't reach the
- * page. It stays hidden until its stylesheet has loaded.
+ * The UI lives in shadow roots, so the page's styles can't reach it and its styles can't reach the
+ * page. It has two layers: one over the screen, and one over the page that scrolls with it, so what's
+ * attached to the page (outlines, "+" buttons) needn't be moved while scrolling. Each stays hidden
+ * until its stylesheet has loaded.
  */
 function mount() {
+	layers.page = layer('sd-inline-edit-page', 'position: absolute; inset: 0 0 auto; height: 0; z-index: 2147482999')
+	layers.screen = layer('sd-inline-edit')
+	render(<PageLayer />, layers.page)
+	render(<ScreenLayer />, layers.screen)
+}
+
+function layer(id, style = '') {
 	const host = document.createElement('div')
-	host.id = 'sd-inline-edit'
+	host.id = id
+	host.style.cssText = style
 	host.style.visibility = 'hidden'
 	const root = host.attachShadow({ mode: 'open' })
 
@@ -52,9 +63,7 @@ function mount() {
 	const container = document.createElement('div')
 	root.append(container)
 	document.body.append(host)
-	render(<App root={root} />, container)
-
-	return host
+	return container
 }
 
 if (config) {

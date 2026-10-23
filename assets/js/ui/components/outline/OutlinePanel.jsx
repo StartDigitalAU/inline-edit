@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'preact/hooks'
 import { rowInView, toggleOutline } from '../../../services/outline'
-import { busy, editing, hoveredRow, outlineOpen, picker, revision, saving, viewport } from '../../../state/signals'
+import { busy, editing, hoveredRow, outlineOpen, picker, revision, saving } from '../../../state/signals'
 import { pageList } from '../../pageList'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
@@ -11,9 +12,10 @@ import { OutlineList } from './OutlineList'
  */
 export function OutlinePanel() {
 	revision.value
-	viewport.value
 	const list = pageList()
-	if (!editing.value || !outlineOpen.value || !list) {
+	const open = editing.value && outlineOpen.value && !!list
+	const current = useRowInView(open && list)
+	if (!open) {
 		return null
 	}
 	const count = list.rows().length
@@ -34,7 +36,7 @@ export function OutlinePanel() {
 			</div>
 			<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5" role="tree" aria-label="Blocks on this page">
 				{count ? (
-					<OutlineList list={list} current={rowInView(list)} />
+					<OutlineList list={list} current={current} />
 				) : (
 					<p class="px-3 py-6 text-center text-[13px] text-subtle">No blocks yet.</p>
 				)}
@@ -56,4 +58,31 @@ export function OutlinePanel() {
 			</div>
 		</nav>
 	)
+}
+
+/**
+ * The block in the middle of the screen, checked once a frame while scrolling. The panel only
+ * re-renders when it's a different block.
+ */
+function useRowInView(list) {
+	const [row, setRow] = useState(null)
+	useEffect(() => {
+		if (!list) {
+			return
+		}
+		let frame = 0
+		const check = () => {
+			frame ||= requestAnimationFrame(() => {
+				frame = 0
+				setRow(rowInView(list))
+			})
+		}
+		check()
+		window.addEventListener('scroll', check, { passive: true })
+		return () => {
+			cancelAnimationFrame(frame)
+			window.removeEventListener('scroll', check)
+		}
+	}, [list, revision.value])
+	return list ? row : null
 }

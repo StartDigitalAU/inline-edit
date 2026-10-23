@@ -14,8 +14,6 @@ export const busy = signal('')
 export const status = signal({ state: '', message: '', link: null })
 
 export const revision = signal(0)
-/** Bumped on scroll and resize, so floating UI follows what it's attached to. */
-export const viewport = signal(0)
 /** Bumped as the text selection changes, so the formatting bar shows what's applied. */
 export const selection = signal(0)
 

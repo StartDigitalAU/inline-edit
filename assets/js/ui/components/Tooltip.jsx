@@ -1,14 +1,15 @@
 import { useEffect } from 'preact/hooks'
 import { tooltipFor } from '../../state/signals'
 import { clampLeft, useFloating } from '../hooks/useFloating'
+import { layers } from '../layers'
 import { Kbd } from './Kbd'
 
 /**
  * Tooltips for anything in the editor's UI with a `data-tip` (and optional `data-keys`), shown
  * above it on hover or keyboard focus.
  */
-export function Tooltip({ root }) {
-	useEffect(() => listen(root), [root])
+export function Tooltip() {
+	useEffect(listen, [])
 	const target = tooltipFor.value
 	return target?.isConnected && target.dataset.tip ? <Tip key={target} target={target} /> : null
 }
@@ -41,23 +42,32 @@ function Tip({ target }) {
 const DELAY = 450
 const GRACE = 300
 
-function listen(root) {
-	let timer = 0
-	let hiddenAt = 0
+let timer = 0
+let hiddenAt = 0
 
-	const show = (target, delay) => {
-		clearTimeout(timer)
-		timer = setTimeout(() => (tooltipFor.value = target), delay)
-	}
-	const hide = () => {
-		clearTimeout(timer)
-		if (tooltipFor.value) {
-			hiddenAt = Date.now()
-		}
-		tooltipFor.value = null
-	}
-	const tipped = node => node?.closest?.('[data-tip]') || null
+function show(target, delay) {
+	clearTimeout(timer)
+	timer = setTimeout(() => (tooltipFor.value = target), delay)
+}
 
+function hide() {
+	clearTimeout(timer)
+	if (tooltipFor.value) {
+		hiddenAt = Date.now()
+	}
+	tooltipFor.value = null
+}
+
+const tipped = node => node?.closest?.('[data-tip]') || null
+
+function listen() {
+	for (const layer of Object.values(layers)) {
+		listenIn(layer.getRootNode())
+	}
+	window.addEventListener('scroll', hide, { passive: true })
+}
+
+function listenIn(root) {
 	root.addEventListener('pointerover', event => {
 		const target = tipped(event.target)
 		if (target && target !== tooltipFor.value && !target.disabled) {
@@ -80,5 +90,4 @@ function listen(root) {
 	})
 	root.addEventListener('focusout', hide)
 	root.addEventListener('pointerdown', hide)
-	window.addEventListener('scroll', hide, { passive: true })
 }
