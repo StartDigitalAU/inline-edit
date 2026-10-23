@@ -1,5 +1,5 @@
 import { BLOCKS, STYLE_FORMATS } from '../config'
-import { escapeHtml } from '../model/text'
+import { escapeHtml, textColor } from '../model/text'
 import { activeField, formatPanel, selection } from '../state/signals'
 import { fieldChanged } from './fields'
 
@@ -67,6 +67,7 @@ export function formatState() {
 	return {
 		block,
 		style,
+		color: currentColor(),
 		bold: isOn('bold'),
 		italic: isOn('italic'),
 		bulleted: isOn('insertUnorderedList'),
@@ -81,6 +82,62 @@ export function setBlock(tag) {
 
 export function toggle(command) {
 	run(() => document.execCommand(command))
+}
+
+/**
+ * Colour the selected text, as the admin editor does: a span with a colour style.
+ */
+export function setColor(color) {
+	run(() => {
+		document.execCommand('styleWithCSS', false, true)
+		document.execCommand('foreColor', false, color)
+		document.execCommand('styleWithCSS', false, false)
+	})
+}
+
+/** Back to the text's own colour. */
+export function clearColor() {
+	run(() => {
+		const range = selectionRange()
+		const el = activeElement()
+		if (!range || !el) {
+			return
+		}
+		for (const node of el.querySelectorAll('span, font')) {
+			if (range.intersectsNode(node) && textColor(node)) {
+				node.style.color = ''
+				node.removeAttribute('color')
+				if (!node.getAttribute('style')) {
+					node.removeAttribute('style')
+				}
+			}
+		}
+	})
+}
+
+/** The colour at the selection, if the text there has one of its own. */
+function currentColor() {
+	const el = activeElement()
+	const range = selectionRange()
+	for (let node = range && nodeAt(range); node && node !== el; node = node.parentNode) {
+		const color = node.nodeType === Node.ELEMENT_NODE ? textColor(node) : ''
+		if (color) {
+			return color
+		}
+	}
+	return ''
+}
+
+/**
+ * The node where a selection starts. Browsers often start it just before an element, at the end
+ * of the text before it (sometimes an empty text node), e.g. right after colouring a word.
+ */
+function nodeAt(range) {
+	const { startContainer: node, startOffset: offset } = range
+	if (node.nodeType === Node.TEXT_NODE) {
+		return offset === node.length && node.nextSibling ? node.nextSibling : node
+	}
+	return node.childNodes[offset] || node
 }
 
 export function clearFormatting() {

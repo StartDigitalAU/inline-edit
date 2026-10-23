@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit;
+namespace TheStartLabs\InlineEdit;
 
 /**
  * Whether editing is available on this request.

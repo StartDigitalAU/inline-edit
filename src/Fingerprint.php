@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit;
+namespace TheStartLabs\InlineEdit;
 
 /**
  * Change detection: a value's fingerprint is sent with the page and checked on save, so a save can't

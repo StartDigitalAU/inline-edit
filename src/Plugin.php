@@ -1,26 +1,26 @@
 <?php
 
-namespace TheStart\InlineEdit;
+namespace TheStartLabs\InlineEdit;
 
-use TheStart\InlineEdit\Drafts\DraftStore;
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Fields\VirtualRows;
-use TheStart\InlineEdit\Page\Assets;
-use TheStart\InlineEdit\Page\Registry;
-use TheStart\InlineEdit\Page\TwigFunctions;
-use TheStart\InlineEdit\Posts\PostUpdater;
-use TheStart\InlineEdit\Preview\SharedPreview;
-use TheStart\InlineEdit\Preview\ShareLinks;
-use TheStart\InlineEdit\Rest\DraftController;
-use TheStart\InlineEdit\Rest\PresenceController;
-use TheStart\InlineEdit\Rest\PreviewController;
-use TheStart\InlineEdit\Rest\Routes;
-use TheStart\InlineEdit\Rest\SaveController;
-use TheStart\InlineEdit\Rest\SettingsController;
-use TheStart\InlineEdit\Rest\ShareController;
-use TheStart\InlineEdit\Rows\RowFactory;
-use TheStart\InlineEdit\Rows\TemplateSigner;
-use TheStart\InlineEdit\Saving\ChangeWriter;
+use TheStartLabs\InlineEdit\Drafts\DraftStore;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Fields\VirtualRows;
+use TheStartLabs\InlineEdit\Page\Assets;
+use TheStartLabs\InlineEdit\Page\Registry;
+use TheStartLabs\InlineEdit\Page\TwigFunctions;
+use TheStartLabs\InlineEdit\Posts\PostUpdater;
+use TheStartLabs\InlineEdit\Preview\SharedPreview;
+use TheStartLabs\InlineEdit\Preview\ShareLinks;
+use TheStartLabs\InlineEdit\Rest\DraftController;
+use TheStartLabs\InlineEdit\Rest\PresenceController;
+use TheStartLabs\InlineEdit\Rest\PreviewController;
+use TheStartLabs\InlineEdit\Rest\Routes;
+use TheStartLabs\InlineEdit\Rest\SaveController;
+use TheStartLabs\InlineEdit\Rest\SettingsController;
+use TheStartLabs\InlineEdit\Rest\ShareController;
+use TheStartLabs\InlineEdit\Rows\RowFactory;
+use TheStartLabs\InlineEdit\Rows\TemplateSigner;
+use TheStartLabs\InlineEdit\Saving\ChangeWriter;
 
 /**
  * Front-end editing for Timber and ACF sites.
@@ -39,6 +39,7 @@ use TheStart\InlineEdit\Saving\ChangeWriter;
  * Hooks:
  * - `sd_inline_edit_enabled` (filter) return false to turn front-end editing off for a request.
  * - `sd_inline_edit_style_formats` (filter) the rich text "Formats" dropdown, as TinyMCE style_formats.
+ * - `sd_inline_edit_text_colors` (filter) rich text's colours, as [['color' => '#ff0000', 'name' => 'Red'], ...].
  * - `sd_inline_edit_image_focus` (filter) an image's focus point as [x, y] percentages.
  * - `sd_inline_edit_save_image_focus` (action) store a focus point set on the page (see Images\FocusPoints).
  * - `sd_inline_edit_layout_thumbnail` (filter) a block layout's picture in the block picker.

@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Fields;
+namespace TheStartLabs\InlineEdit\Fields;
 
 /**
  * How a setting field (a toggle, select, number, link…) appears in a block's settings panel, and its

@@ -1,6 +1,7 @@
 import { Fragment } from 'preact'
 import { useRef } from 'preact/hooks'
 import { useListDrag } from './useListDrag'
+import { revision } from '../../../state/signals'
 import { OutlineItem } from './OutlineItem'
 
 /**
@@ -8,6 +9,8 @@ import { OutlineItem } from './OutlineItem'
  * dragged row will land.
  */
 export function OutlineList({ list, depth = 0, current }) {
+	// Rows change without this component's props changing, so it follows the page itself.
+	revision.value
 	const items = useRef(null)
 	const { drag, onPointerDown } = useListDrag(list, items)
 	const rows = list.rows()

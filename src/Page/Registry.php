@@ -1,9 +1,9 @@
 <?php
 
-namespace TheStart\InlineEdit\Page;
+namespace TheStartLabs\InlineEdit\Page;
 
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Rows\TemplateSigner;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Rows\TemplateSigner;
 
 /**
  * The fields and row lists printed on the page, in the order the editor script receives them.

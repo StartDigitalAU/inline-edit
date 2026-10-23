@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Posts;
+namespace TheStartLabs\InlineEdit\Posts;
 
 use WP_Error;
 

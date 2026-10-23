@@ -1,8 +1,8 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Plugin;
+use TheStartLabs\InlineEdit\Plugin;
 use WP_REST_Server;
 
 /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Posts;
+namespace TheStartLabs\InlineEdit\Posts;
 
 /**
  * A database transaction around a save, so a change that fails validation leaves nothing half saved.

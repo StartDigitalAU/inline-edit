@@ -1,6 +1,6 @@
 import { LOCKED_REASONS } from '../../config'
 import { lockedField } from '../../state/signals'
-import { clampLeft, useFloating } from '../hooks/useFloating'
+import { clampToPage, useFloating } from '../hooks/useFloating'
 import { Icon } from './Icon'
 
 /**
@@ -15,7 +15,7 @@ function Tip({ region, el }) {
 	const ref = useFloating(({ width, height }) => {
 		const rect = el.getBoundingClientRect()
 		const top = rect.top > height + 24 ? rect.top - height - 12 : rect.bottom + 12
-		return { left: clampLeft(rect.left, width, 10), top }
+		return { left: clampToPage(rect.left, width, 10), top }
 	})
 
 	return (

@@ -1,8 +1,8 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Fields\Resolver;
 use WP_REST_Request;
 
 /**

@@ -1,13 +1,13 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Posts\PostUpdater;
-use TheStart\InlineEdit\Posts\Transaction;
-use TheStart\InlineEdit\Saving\ChangeSet;
-use TheStart\InlineEdit\Saving\ChangeWriter;
-use TheStart\InlineEdit\Saving\SaveErrors;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Posts\PostUpdater;
+use TheStartLabs\InlineEdit\Posts\Transaction;
+use TheStartLabs\InlineEdit\Saving\ChangeSet;
+use TheStartLabs\InlineEdit\Saving\ChangeWriter;
+use TheStartLabs\InlineEdit\Saving\SaveErrors;
 use WP_Error;
 use WP_REST_Request;
 

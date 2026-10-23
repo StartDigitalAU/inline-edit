@@ -1,10 +1,10 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Posts\Transaction;
-use TheStart\InlineEdit\Preview\ShareLinks;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Posts\Transaction;
+use TheStartLabs\InlineEdit\Preview\ShareLinks;
 use WP_Error;
 use WP_REST_Request;
 

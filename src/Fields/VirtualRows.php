@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Fields;
+namespace TheStartLabs\InlineEdit\Fields;
 
 /**
  * Rows that only exist in the editor so far. Their fields have no ACF reference in the database yet,

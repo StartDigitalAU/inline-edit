@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Preview;
+namespace TheStartLabs\InlineEdit\Preview;
 
 /**
  * Links that show someone's unsaved changes to a page (see SharedPreview). Each is a random token

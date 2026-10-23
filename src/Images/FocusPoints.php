@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Images;
+namespace TheStartLabs\InlineEdit\Images;
 
 use WP_Error;
 

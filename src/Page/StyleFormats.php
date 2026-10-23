@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Page;
+namespace TheStartLabs\InlineEdit\Page;
 
 /**
  * The rich text "Formats" dropdown. Sites pass their TinyMCE style_formats through the

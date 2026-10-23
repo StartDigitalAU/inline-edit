@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Saving;
+namespace TheStartLabs\InlineEdit\Saving;
 
 use WP_Error;
 

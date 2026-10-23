@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Rows;
+namespace TheStartLabs\InlineEdit\Rows;
 
 use WP_Error;
 

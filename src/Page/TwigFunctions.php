@@ -1,8 +1,8 @@
 <?php
 
-namespace TheStart\InlineEdit\Page;
+namespace TheStartLabs\InlineEdit\Page;
 
-use TheStart\InlineEdit\Access;
+use TheStartLabs\InlineEdit\Access;
 
 /**
  * The Twig functions templates use to mark what's editable. Each prints a data attribute for users

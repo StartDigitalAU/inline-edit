@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks'
 import { deleteRow, duplicateRow, moveRow } from '../../../services/blocks'
 import { goToRow, isNewRow, listsIn, rowSummary } from '../../../services/outline'
-import { hoveredRow } from '../../../state/signals'
+import { hoveredRow, revision } from '../../../state/signals'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
 import { LayoutGlyph } from '../LayoutGlyph'
@@ -12,6 +12,7 @@ import { OutlineList } from './OutlineList'
  * until opened. Click to go to it, drag to move it, or Alt+↑/↓.
  */
 export function OutlineItem({ list, row, index, depth, current, dragging, onPointerDown }) {
+	revision.value
 	const [open, setOpen] = useState(false)
 	const children = listsIn(row)
 	const label = list.rowLabel(row)

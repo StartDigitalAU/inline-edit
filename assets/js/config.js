@@ -21,6 +21,9 @@ export const BLOCKS = [
 // The site's TinyMCE "Formats", so the admin and front-end editors offer the same styles.
 export const STYLE_FORMATS = Array.isArray(config?.styleFormats) ? config.styleFormats : []
 
+// Rich text's colour palette, matching the admin editor's colour picker (see src/Page/TextColors.php).
+export const TEXT_COLORS = Array.isArray(config?.textColors) ? config.textColors : []
+
 // Field types edited in a block's settings panel rather than on the page (see src/Fields/Resolver.php).
 export const SETTING_TYPES = Array.isArray(config?.settingTypes) ? config.settingTypes : []
 

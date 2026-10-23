@@ -3,7 +3,7 @@
 Front-end editing for Timber and ACF sites. Logged-in editors press **Edit page** (or `E`) and change the page right where it is.
 
 - **Text, rich text and images:**
-  - A formatting bar with the site's own formats, plus link search.
+  - A formatting bar with the site's own formats and text colours (the same as the admin editor's), plus link search.
   - The media library.
   - Drag an image file onto an image to upload it.
   - Set an image's focus point on the page.
@@ -105,6 +105,7 @@ Unsaved changes are stored per person and page (user meta) a moment after each c
 | --- | --- | --- |
 | `sd_inline_edit_enabled` | filter | Return `false` to turn editing off for a request. |
 | `sd_inline_edit_style_formats` | filter | The rich text **Formats** dropdown, as TinyMCE `style_formats`. |
+| `sd_inline_edit_text_colors` | filter | Rich text's colour palette, as `[['color' => '#ff0000', 'name' => 'Red'], ...]`. Defaults to the admin editor's (TinyMCE's `textcolor_map`, or its standard colours). |
 | `sd_inline_edit_image_focus` | filter | An image's focus point as `[x, y]` percentages. |
 | `sd_inline_edit_save_image_focus` | action | Store a focus point set on the page: `($attachment_id, $x, $y)`. Focus points are only offered when this is handled. |
 | `sd_inline_edit_layout_thumbnail` | filter | A layout's picture in the block picker. |

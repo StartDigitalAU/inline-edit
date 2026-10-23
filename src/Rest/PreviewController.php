@@ -1,14 +1,14 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Access;
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Fields\Sanitizer;
-use TheStart\InlineEdit\Fields\VirtualRows;
-use TheStart\InlineEdit\Page\Registry;
-use TheStart\InlineEdit\Rows\RowFactory;
-use TheStart\InlineEdit\Rows\TemplateSigner;
+use TheStartLabs\InlineEdit\Access;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Fields\Sanitizer;
+use TheStartLabs\InlineEdit\Fields\VirtualRows;
+use TheStartLabs\InlineEdit\Page\Registry;
+use TheStartLabs\InlineEdit\Rows\RowFactory;
+use TheStartLabs\InlineEdit\Rows\TemplateSigner;
 use Timber\Timber;
 use WP_Error;
 use WP_REST_Request;

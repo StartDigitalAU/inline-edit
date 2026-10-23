@@ -1,11 +1,11 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Fields\SettingControl;
-use TheStart\InlineEdit\Fields\VirtualRows;
-use TheStart\InlineEdit\Rows\RowFactory;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Fields\SettingControl;
+use TheStartLabs\InlineEdit\Fields\VirtualRows;
+use TheStartLabs\InlineEdit\Rows\RowFactory;
 use WP_REST_Request;
 
 /**

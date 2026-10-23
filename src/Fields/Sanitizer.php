@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Fields;
+namespace TheStartLabs\InlineEdit\Fields;
 
 use WP_Error;
 

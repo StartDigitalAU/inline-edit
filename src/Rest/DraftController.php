@@ -1,9 +1,9 @@
 <?php
 
-namespace TheStart\InlineEdit\Rest;
+namespace TheStartLabs\InlineEdit\Rest;
 
-use TheStart\InlineEdit\Drafts\DraftStore;
-use TheStart\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Drafts\DraftStore;
+use TheStartLabs\InlineEdit\Fields\Resolver;
 use WP_REST_Request;
 
 /**

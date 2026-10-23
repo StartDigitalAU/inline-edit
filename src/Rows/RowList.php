@@ -1,9 +1,9 @@
 <?php
 
-namespace TheStart\InlineEdit\Rows;
+namespace TheStartLabs\InlineEdit\Rows;
 
-use TheStart\InlineEdit\Fingerprint;
-use TheStart\InlineEdit\Versioned;
+use TheStartLabs\InlineEdit\Fingerprint;
+use TheStartLabs\InlineEdit\Versioned;
 use WP_Error;
 
 /**

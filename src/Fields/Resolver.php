@@ -1,9 +1,9 @@
 <?php
 
-namespace TheStart\InlineEdit\Fields;
+namespace TheStartLabs\InlineEdit\Fields;
 
-use TheStart\InlineEdit\Rows\RowFactory;
-use TheStart\InlineEdit\Rows\RowList;
+use TheStartLabs\InlineEdit\Rows\RowFactory;
+use TheStartLabs\InlineEdit\Rows\RowList;
 use WP_Error;
 use WP_Post;
 

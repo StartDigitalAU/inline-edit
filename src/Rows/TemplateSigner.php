@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Rows;
+namespace TheStartLabs\InlineEdit\Rows;
 
 /**
  * Signs the row template a page names in `editable_rows()`, so the preview endpoint only renders

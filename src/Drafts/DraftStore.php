@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Drafts;
+namespace TheStartLabs\InlineEdit\Drafts;
 
 use WP_Error;
 

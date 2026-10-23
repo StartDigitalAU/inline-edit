@@ -1,10 +1,10 @@
 <?php
 
-namespace TheStart\InlineEdit\Fields;
+namespace TheStartLabs\InlineEdit\Fields;
 
-use TheStart\InlineEdit\Fingerprint;
-use TheStart\InlineEdit\Images\FocusPoints;
-use TheStart\InlineEdit\Versioned;
+use TheStartLabs\InlineEdit\Fingerprint;
+use TheStartLabs\InlineEdit\Images\FocusPoints;
+use TheStartLabs\InlineEdit\Versioned;
 use WP_Error;
 
 /**

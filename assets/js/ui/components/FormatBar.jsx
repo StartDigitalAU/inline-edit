@@ -1,4 +1,4 @@
-import { ALT, BLOCKS, MOD, STYLE_FORMATS } from '../../config'
+import { ALT, BLOCKS, MOD, STYLE_FORMATS, TEXT_COLORS } from '../../config'
 import {
 	applyStyle,
 	clearFormatting,
@@ -9,7 +9,8 @@ import {
 	toggle,
 } from '../../services/formatting'
 import { activeField, formatPanel, mediaOpen, selection } from '../../state/signals'
-import { clampLeft, useFloating } from '../hooks/useFloating'
+import { clampToPage, useFloating } from '../hooks/useFloating'
+import { ColorDropdown } from './ColorDropdown'
 import { Dropdown, DropdownHeading, DropdownItem } from './Dropdown'
 import { Icon } from './Icon'
 import { LinkForm } from './LinkForm'
@@ -50,7 +51,7 @@ function Bar({ el }) {
 			top = rect.bottom + 10
 		}
 		top = Math.min(top, window.innerHeight - BOTTOM_BAR_SPACE - height)
-		return { left: clampLeft(rect.left + rect.width / 2 - width / 2, width, 10), top }
+		return { left: clampToPage(rect.left + rect.width / 2 - width / 2, width, 10), top }
 	})
 
 	return (
@@ -60,13 +61,14 @@ function Bar({ el }) {
 			// Keep the field's selection when using the bar (except in the link field).
 			onMouseDown={event => event.target.closest('input') || event.preventDefault()}
 		>
-			{formatPanel.value === 'link' ? <LinkForm /> : <Tools />}
+			{/* The state is worked out here and passed down: @preact/signals skips re-rendering children
+			    whose props haven't changed, and the selection signal is read here. */}
+			{formatPanel.value === 'link' ? <LinkForm /> : <Tools state={formatState()} />}
 		</div>
 	)
 }
 
-function Tools() {
-	const state = formatState()
+function Tools({ state }) {
 	const blockLabel = BLOCKS.find(([tag]) => tag === state.block)[1]
 
 	return (
@@ -80,6 +82,7 @@ function Tools() {
 			</Dropdown>
 			{STYLE_FORMATS.length > 0 && <StyleDropdown current={state.style} />}
 			<Separator />
+			{TEXT_COLORS.length > 0 && <ColorDropdown current={state.color} />}
 			<ToolButton active={state.bold} tip="Bold" keys={[MOD, 'B']} onClick={() => toggle('bold')}>
 				<b class="font-serif text-[15px]">B</b>
 			</ToolButton>

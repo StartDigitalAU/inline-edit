@@ -1,8 +1,8 @@
 <?php
 
-namespace TheStart\InlineEdit\Saving;
+namespace TheStartLabs\InlineEdit\Saving;
 
-use TheStart\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Fields\Resolver;
 
 /**
  * What the editor wants saved: new orders of rows (`lists`), field values (`changes`, settings

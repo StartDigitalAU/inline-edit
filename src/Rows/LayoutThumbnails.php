@@ -1,6 +1,6 @@
 <?php
 
-namespace TheStart\InlineEdit\Rows;
+namespace TheStartLabs\InlineEdit\Rows;
 
 /**
  * A picture of each block layout for the editor's block picker, from (in order):

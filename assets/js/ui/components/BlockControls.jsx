@@ -3,7 +3,7 @@ import { deleteRow, duplicateRow, moveRow } from '../../services/blocks'
 import { startDrag } from '../../services/drag'
 import { hasSettings } from '../../services/settings'
 import { busy, dragging, editing, hoveredRow, picker, revision, saving, settingsFor } from '../../state/signals'
-import { clamp, useFloating } from '../hooks/useFloating'
+import { clampToPage, useFloating } from '../hooks/useFloating'
 import { Button } from './Button'
 import { Icon } from './Icon'
 
@@ -86,7 +86,7 @@ function Toolbar({ list, row, horizontal }) {
 		const rect = row.getBoundingClientRect()
 		const stuckToScreen = Math.max(rect.top + INSET, INSET)
 		return {
-			left: clamp(rect.right - width - INSET, INSET, window.innerWidth - width - INSET),
+			left: clampToPage(rect.right - width - INSET, width, INSET),
 			top: Math.max(Math.min(stuckToScreen, rect.bottom - height - INSET), rect.top),
 		}
 	})

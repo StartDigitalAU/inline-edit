@@ -1,12 +1,12 @@
 <?php
 
-namespace TheStart\InlineEdit\Saving;
+namespace TheStartLabs\InlineEdit\Saving;
 
-use TheStart\InlineEdit\Fields\Field;
-use TheStart\InlineEdit\Fields\Resolver;
-use TheStart\InlineEdit\Fingerprint;
-use TheStart\InlineEdit\Images\FocusPoints;
-use TheStart\InlineEdit\Versioned;
+use TheStartLabs\InlineEdit\Fields\Field;
+use TheStartLabs\InlineEdit\Fields\Resolver;
+use TheStartLabs\InlineEdit\Fingerprint;
+use TheStartLabs\InlineEdit\Images\FocusPoints;
+use TheStartLabs\InlineEdit\Versioned;
 use WP_Error;
 
 /**
