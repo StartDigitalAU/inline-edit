@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
-import { settingsOf } from '../../../model/page'
+import { regions, settingsOf } from '../../../model/page'
 import { changeSetting, loadSettings } from '../../../services/settings'
 import { editing, revision, settingsFor } from '../../../state/signals'
 import { clamp, useFloating } from '../../hooks/useFloating'
@@ -24,7 +24,9 @@ export function SettingsPanel() {
 
 function Panel({ list, row }) {
 	revision.value
-	const settings = settingsOf(row)
+	// A field already editable on the page (e.g. a button's link) is edited there, not here too.
+	const onPage = new Set(regions.filter(region => region.isConnected).map(region => region.field))
+	const settings = settingsOf(row).filter(setting => !onPage.has(setting.field))
 	const [state, setState] = useState(settings.length ? 'ready' : 'loading')
 
 	useEffect(() => {

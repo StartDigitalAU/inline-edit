@@ -6,6 +6,7 @@ import {
 	formatPanel,
 	hoveredField,
 	hoveredRow,
+	linkEditing,
 	lockedField,
 	menuOpen,
 	picker,
@@ -17,6 +18,7 @@ import { pending } from '../services/changes'
 import { draftPending } from '../services/drafts'
 import { fieldChanged, pasteText } from '../services/fields'
 import { forgetSelection, rememberSelection } from '../services/formatting'
+import { closeLinkEditor, openLinkEditor } from '../services/linkFields'
 import { openMediaLibrary } from '../services/media'
 import { uploadImage } from '../services/upload'
 
@@ -164,10 +166,17 @@ function onClick(event, fieldAt, fromEditor) {
 	const field = fieldAt(event.target)
 	lockedField.value = field && !field.region.isEditable ? field : null
 
+	if (linkEditing.value && linkEditing.value.el !== field?.el) {
+		closeLinkEditor()
+	}
+
 	if (field?.region.kind === 'image') {
 		event.preventDefault()
 		event.stopPropagation()
 		openMediaLibrary(field.region, field.el)
+	} else if (field?.region.kind === 'link') {
+		event.preventDefault()
+		openLinkEditor(field.region, field.el)
 	} else if (field && (!field.region.isEditable || event.target.closest('a'))) {
 		// Links inside editable text are for editing, not following.
 		event.preventDefault()

@@ -197,3 +197,28 @@
 	width: auto;
 	margin: 0;
 }
+
+/* A block hidden from visitors (ACF Extended's toggle): a slim bar while editing, nothing otherwise. */
+[data-sd-hidden-row] {
+	display: none;
+}
+
+.sd-inline-editing [data-sd-hidden-row] {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 44px;
+	margin: 12px auto;
+	width: min(100% - 32px, 1120px);
+	border-radius: 10px;
+	background: repeating-linear-gradient(-45deg, rgb(128 128 128 / 0.06) 0 8px, rgb(128 128 128 / 0.12) 8px 16px);
+	box-shadow: inset 0 0 0 1px rgb(128 128 128 / 0.35);
+}
+
+.sd-inline-editing [data-sd-hidden-row]::before {
+	content: attr(data-sd-hidden-row);
+	color: rgb(128 128 128);
+	font: 500 13px/1 Geist, system-ui, -apple-system, "Segoe UI", sans-serif;
+	letter-spacing: -0.006em;
+}

@@ -14,7 +14,7 @@ use WP_Post;
 final class Resolver
 {
 	/** Fields edited right on the page, marked with `editable()`. */
-	public const FIELD_TYPES = ['text', 'textarea', 'wysiwyg', 'image'];
+	public const FIELD_TYPES = ['text', 'textarea', 'wysiwyg', 'image', 'link'];
 
 	/** Fields edited in a block's settings panel, as they have nothing to click on the page. */
 	public const SETTING_TYPES = [
@@ -158,9 +158,7 @@ final class Resolver
 		$field = $field ?: $this->virtual->find($name) ?: $this->fromRow($name, $acf_post_id);
 
 		if (!$field && is_int($acf_post_id)) {
-			$field = acf_maybe_get_field($name, $acf_post_id);
-			// Only a top-level field matches its own name; anything else needs its reference.
-			$field = $field && $field['name'] === $name ? $field : null;
+			$field = $this->fromFieldGroups($name, $acf_post_id);
 		}
 
 		if (!$field || !in_array($field['type'], $types, true) || !empty($field['multiple'])) {
@@ -176,6 +174,23 @@ final class Resolver
 		$field['name'] = $name;
 
 		return $field;
+	}
+
+	/**
+	 * A top-level field with nothing saved yet (e.g. on a brand-new page), from the field groups
+	 * shown on the post.
+	 */
+	private function fromFieldGroups(string $name, int $post_id): ?array
+	{
+		foreach (acf_get_field_groups(['post_id' => $post_id]) as $group) {
+			foreach (acf_get_fields($group) as $field) {
+				if ($field['name'] === $name) {
+					return $field;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/**

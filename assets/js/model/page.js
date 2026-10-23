@@ -1,6 +1,6 @@
 import { Region } from './Region'
 import { RowList } from './RowList'
-import { rowInfo, setRowInfo } from './rows'
+import { hiddenPlaceholder, rowInfo, setRowInfo } from './rows'
 
 /**
  * Everything editable on the page: fields (Regions) and row lists (RowLists), including ones added
@@ -30,9 +30,11 @@ export function register(root, data, { isNew = false, except = [] } = {}) {
 		if (!list || !rowsLineUp(list, details)) {
 			continue
 		}
-		list.rows().forEach((row, index) =>
-			setRowInfo(row, { index, origin: { from: index }, layout: details.rows[index] })
-		)
+		addHiddenPlaceholders(list, details)
+		list.rows().forEach((row, index) => {
+			const hidden = (details.hidden || []).includes(index)
+			setRowInfo(row, { index, origin: { from: index }, layout: details.rows[index], hidden, wasHidden: hidden })
+		})
 		lists.push(list)
 		added.lists.push(list)
 	}
@@ -53,10 +55,21 @@ export function register(root, data, { isNew = false, except = [] } = {}) {
 	return added
 }
 
-// Rows are saved by position, so they have to match the list's elements one to one.
+/**
+ * Hidden blocks aren't on the page, so a placeholder takes each one's place.
+ */
+function addHiddenPlaceholders(list, details) {
+	for (const index of details.hidden || []) {
+		const label = list.layout(details.rows[index])?.label || details.rows[index]
+		list.el.insertBefore(hiddenPlaceholder(label), list.rows()[index] || null)
+	}
+}
+
+// Rows are saved by position, so they have to match the list's elements one to one (hidden rows
+// aside, which get placeholders).
 function rowsLineUp(list, details) {
 	const found = list.rows().length
-	if (found === details.rows.length) {
+	if (found === details.rows.length - (details.hidden || []).length) {
 		return true
 	}
 	console.warn(

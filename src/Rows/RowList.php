@@ -70,6 +70,9 @@ final class RowList implements Versioned
 			// A repeater's rows all have the same fields.
 			'fields' => $this->isFlexible() ? [] : $this->summary($this->acf['sub_fields'] ?? []),
 			'rows' => $this->structure(),
+			// Hidden blocks (see HiddenRows) aren't on the page, so the editor knows where they go.
+			'hidden' => HiddenRows::of($this),
+			'canHide' => HiddenRows::supported($this->acf),
 			'min' => (int) ($this->acf['min'] ?? 0),
 			'max' => (int) ($this->acf['max'] ?? 0),
 			'base' => $this->fingerprint(),
@@ -102,12 +105,15 @@ final class RowList implements Versioned
 
 	/**
 	 * Write a new order of rows. Each entry is ['from' => index of an existing row] or
-	 * ['layout' => layout of a new row] ('' for a repeater).
+	 * ['layout' => layout of a new row] ('' for a repeater), and can say whether it's `hidden`
+	 * (an existing row keeps its own setting unless it says).
 	 */
 	public function reorder(array $order): true|WP_Error
 	{
-		$current = acf_get_value($this->postId, $this->acf);
+		// Hidden rows included, or they'd be dropped (see HiddenRows).
+		$current = HiddenRows::including(fn() => acf_get_value($this->postId, $this->acf));
 		$current = is_array($current) ? array_values($current) : [];
+		$wasHidden = HiddenRows::of($this);
 
 		$rows = [];
 		foreach ($order as $item) {
@@ -124,8 +130,25 @@ final class RowList implements Versioned
 		}
 
 		acf_update_value($rows, $this->postId, $this->acf);
+		HiddenRows::write($this, $rows, $this->hiddenPositions($order, $wasHidden));
 
 		return true;
+	}
+
+	/**
+	 * The new positions of rows that should be hidden.
+	 */
+	private function hiddenPositions(array $order, array $wasHidden): array
+	{
+		$hidden = [];
+		foreach (array_values($order) as $i => $item) {
+			$keep = isset($item['from']) && in_array($item['from'], $wasHidden, true);
+			if ($item['hidden'] ?? $keep) {
+				$hidden[] = $i;
+			}
+		}
+
+		return $hidden;
 	}
 
 	private function row(array $item, array $current): array|WP_Error

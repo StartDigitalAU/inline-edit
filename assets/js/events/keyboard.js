@@ -1,7 +1,8 @@
 import { BLOCKS } from '../config'
 import { regionFor } from '../model/page'
-import { devicePreview, editing, focusing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
+import { devicePreview, editing, newPageOpen, focusing, linkEditing, formatPanel, lockedField, menuOpen, picker, settingsFor, shortcutsOpen } from '../state/signals'
 import { finishFocus } from '../services/focus'
+import { closeLinkEditor, openLinkEditor } from '../services/linkFields'
 import { toggleEditing } from '../services/editing'
 import { toggleOutline } from '../services/outline'
 import { redo, undo } from '../services/history'
@@ -68,10 +69,10 @@ function fieldKeys(event, region, mod) {
 	const key = event.key.toLowerCase()
 	const el = event.target.closest('[data-sd-edit]')
 
-	if (region.kind === 'image') {
+	if (region.kind === 'image' || region.kind === 'link') {
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault()
-			openMediaLibrary(region, el)
+			region.kind === 'image' ? openMediaLibrary(region, el) : openLinkEditor(region, el)
 		}
 	} else if (event.key === 'Escape') {
 		el.blur()
@@ -96,7 +97,9 @@ function fieldKeys(event, region, mod) {
 function closeTopmost() {
 	const closable = [
 		[devicePreview, null],
+		[newPageOpen, false],
 		[picker, null],
+		[linkEditing, null],
 		[focusing, null],
 		[settingsFor, null],
 		[shortcutsOpen, false],
@@ -108,6 +111,10 @@ function closeTopmost() {
 		if (state.value) {
 			if (state === focusing) {
 				finishFocus()
+				return true
+			}
+			if (state === linkEditing) {
+				closeLinkEditor()
 				return true
 			}
 			state.value = closed

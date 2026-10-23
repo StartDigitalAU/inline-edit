@@ -3,6 +3,7 @@
 namespace TheStartLabs\InlineEdit\Page;
 
 use TheStartLabs\InlineEdit\Access;
+use TheStartLabs\InlineEdit\Rows\HiddenRows;
 
 /**
  * The Twig functions templates use to mark what's editable. Each prints a data attribute for users
@@ -41,8 +42,39 @@ final class TwigFunctions
 				'options' => ['is_safe' => ['html']],
 			];
 		}
+		$functions['rows_of'] = ['callable' => [$this, 'rowsOf']];
 
 		return $functions;
+	}
+
+	/**
+	 * A flexible content field's rows to loop over, each as `{ row, prefix }`: the row's values, and
+	 * the prefix of its fields' names (`page_builder_2_`).
+	 *
+	 * Use this rather than counting with `loop.index0`: blocks hidden with ACF Extended aren't in the
+	 * loop but still have their place, so counting would give the rows after one the wrong names.
+	 *
+	 *   {% for item in rows_of(post, 'page_builder') %}
+	 *     {% include 'partials/block.twig' with { row: item.row, field_prefix: item.prefix } %}
+	 *   {% endfor %}
+	 */
+	public function rowsOf(mixed $target, string $field): array
+	{
+		$post_id = is_object($target) && isset($target->ID) ? (int) $target->ID : (int) $target;
+		$rows = $post_id && function_exists('get_field') ? get_field($field, $post_id) : null;
+		if (!is_array($rows)) {
+			return [];
+		}
+
+		$stored = acf_get_metadata($post_id, $field);
+		$count = is_array($stored) ? count($stored) : count($rows);
+		$shown = array_values(array_diff(range(0, max(0, $count - 1)), HiddenRows::indexes($post_id, $field)));
+
+		return array_map(
+			fn($row, $i) => ['row' => $row, 'prefix' => "{$field}_" . ($shown[$i] ?? $i) . '_'],
+			array_values($rows),
+			array_keys(array_values($rows)),
+		);
 	}
 
 	public function editable(mixed $target, mixed $field): string

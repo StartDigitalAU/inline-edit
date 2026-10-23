@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import { deleteRow, duplicateRow, moveRow } from '../../../services/blocks'
 import { goToRow, isNewRow, listsIn, rowSummary } from '../../../services/outline'
+import { toggleHidden } from '../../../services/visibility'
 import { hoveredRow, revision } from '../../../state/signals'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
@@ -34,7 +35,7 @@ export function OutlineItem({ list, row, index, depth, current, dragging, onPoin
 	}
 
 	return (
-		<li data-row={index} class={dragging ? 'opacity-40' : ''}>
+		<li data-row={index} class={dragging ? 'opacity-40' : list.isHidden(row) ? 'opacity-50' : ''}>
 			<div
 				role="treeitem"
 				tabIndex={0}
@@ -58,13 +59,24 @@ export function OutlineItem({ list, row, index, depth, current, dragging, onPoin
 					<LayoutGlyph fields={list.fieldsOf(row)} class="h-4 w-6" />
 				</span>
 				<span class="flex min-w-0 flex-1 flex-col leading-tight">
-					<span class="flex items-center gap-1.5 truncate text-[13px] font-medium">
-						{label}
-						{isNewRow(row) && <span class="rounded bg-accent/15 px-1 text-[10px] font-semibold uppercase tracking-wide text-accent-light">New</span>}
+					<span class="flex min-w-0 items-center gap-1.5 text-[13px] font-medium">
+						<span class="truncate">{label}</span>
+						{isNewRow(row) && <Badge class="bg-accent/15 text-accent-light">New</Badge>}
+						{list.isHidden(row) && <Badge class="bg-raised text-subtle">Hidden</Badge>}
 					</span>
 					{summary && <span class="truncate text-xs text-muted">{summary}</span>}
 				</span>
 				<span class="flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+					{list.canHide && (
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							tip={list.isHidden(row) ? 'Show to visitors' : 'Hide from visitors'}
+							onClick={() => toggleHidden(list, row)}
+						>
+							<Icon name={list.isHidden(row) ? 'eye' : 'eyeOff'} />
+						</Button>
+					)}
 					<Button variant="ghost" size="icon-sm" tip="Duplicate" disabled={!list.canDuplicate(row)} onClick={() => duplicateRow(list, row)}>
 						<Icon name="copy" />
 					</Button>
@@ -85,5 +97,11 @@ export function OutlineItem({ list, row, index, depth, current, dragging, onPoin
 					</div>
 				))}
 		</li>
+	)
+}
+
+function Badge({ class: className, children }) {
+	return (
+		<span class={`shrink-0 rounded px-1 py-px text-[10px] font-semibold uppercase leading-none tracking-wide ${className}`}>{children}</span>
 	)
 }

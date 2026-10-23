@@ -12,6 +12,7 @@ import {
 	picker,
 	touch,
 	lastDeleted,
+	linkEditing,
 	settingsFor,
 	dragging,
 } from '../state/signals'
@@ -117,6 +118,7 @@ function closeEverything() {
 	menuOpen.value = false
 	picker.value = null
 	lastDeleted.value = null
+	linkEditing.value = null
 	settingsFor.value = null
 	dragging.value = null
 	formatPanel.value = ''

@@ -5,7 +5,7 @@
 
 // What the editor adds to the page while editing.
 const EDITOR_ATTRIBUTES = ['contenteditable', 'spellcheck', 'data-sd-kind', 'data-sd-dirty', 'data-sd-error', 'data-sd-empty', 'data-sd-flash', 'data-sd-dragging']
-const REMOVE = ['#sd-inline-edit', '#wpadminbar', '#admin-bar-css', '#admin-bar-inline-css', 'script', 'noscript', '[data-sd-placeholder]']
+const REMOVE = ['#sd-inline-edit', '#wpadminbar', '#admin-bar-css', '#admin-bar-inline-css', 'script', 'noscript', '[data-sd-placeholder]', '[data-sd-hidden-row]']
 
 export function pageSnapshot() {
 	const doc = document.documentElement.cloneNode(true)

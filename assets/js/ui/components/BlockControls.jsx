@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import { deleteRow, duplicateRow, moveRow } from '../../services/blocks'
 import { startDrag } from '../../services/drag'
+import { toggleHidden } from '../../services/visibility'
 import { hasSettings } from '../../services/settings'
 import { busy, dragging, editing, hoveredRow, picker, revision, saving, settingsFor } from '../../state/signals'
 import { clampToPage, useFloating } from '../hooks/useFloating'
@@ -118,7 +119,7 @@ function Toolbar({ list, row, horizontal }) {
 			>
 				<Icon name="down" class={horizontal ? '-rotate-90' : ''} />
 			</Button>
-			{hasSettings(list, row) && (
+			{hasSettings(list, row) && !list.isHidden(row) && (
 				<Button
 					variant="ghost"
 					size="icon-sm"
@@ -127,6 +128,16 @@ function Toolbar({ list, row, horizontal }) {
 					onClick={() => (settingsFor.value = settingsFor.value?.row === row ? null : { list, row })}
 				>
 					<Icon name="settings" />
+				</Button>
+			)}
+			{list.canHide && (
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					tip={list.isHidden(row) ? 'Show to visitors' : 'Hide from visitors'}
+					onClick={() => toggleHidden(list, row)}
+				>
+					<Icon name={list.isHidden(row) ? 'eye' : 'eyeOff'} />
 				</Button>
 			)}
 			<Button variant="ghost" size="icon-sm" tip="Duplicate" disabled={!list.canDuplicate(row)} onClick={() => duplicateRow(list, row)}>

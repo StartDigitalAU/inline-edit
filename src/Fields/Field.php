@@ -67,6 +67,11 @@ final class Field implements Versioned
 			return $locked('readonly');
 		}
 
+		// A link can be on the page (its <a> marked with editable()) or in a block's settings.
+		if ($this->type === 'link') {
+			return ['kind' => 'link', 'source' => SettingControl::value($this), 'reason' => ''];
+		}
+
 		if ($this->isSetting()) {
 			return ['kind' => 'setting', 'source' => '', 'reason' => ''];
 		}
@@ -109,12 +114,16 @@ final class Field implements Versioned
 	/**
 	 * The value as templates print it. For images, what the editor needs to update the <img>.
 	 */
-	public function rendered(): string|array
+	public function rendered(): string|array|null
 	{
 		$raw = $this->raw();
 
 		if ($this->isTitle()) {
 			return (string) apply_filters('the_title', $raw, $this->postId);
+		}
+
+		if ($this->type === 'link') {
+			return (array) SettingControl::value($this);
 		}
 
 		if ($this->type === 'image') {
@@ -159,7 +168,10 @@ final class Field implements Versioned
 	public function saved(): array
 	{
 		if ($this->isSetting()) {
-			return ['kind' => 'setting', 'value' => SettingControl::value($this), 'base' => $this->fingerprint()];
+			$value = SettingControl::value($this);
+
+			// A link edited on the page also needs what to show (the same value).
+			return ['kind' => $this->type === 'link' ? 'link' : 'setting', 'value' => $value, 'rendered' => $value, 'base' => $this->fingerprint()];
 		}
 
 		$state = $this->state();

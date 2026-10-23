@@ -33,6 +33,8 @@ export const shortcutsOpen = signal(false)
 export const outlineOpen = signal(false)
 /** The block whose settings panel is open: { list, row }. */
 export const settingsFor = signal(null)
+/** Starting a new page (the title dialog is open). */
+export const newPageOpen = signal(false)
 /** Choosing a block to add: { list, index }. */
 export const picker = signal(null)
 /** The element whose tooltip is showing. */
@@ -45,6 +47,8 @@ export const lastDeleted = signal(null)
 export const dragging = signal(null)
 /** The formatting bar's open panel: '', 'block', 'style' or 'link'. */
 export const formatPanel = signal('')
+/** Editing a link field in its popover: { region, el }. */
+export const linkEditing = signal(null)
 /** Setting an image's focus point: { region, el }. */
 export const focusing = signal(null)
 /** An image a file is being dragged over: its element. */

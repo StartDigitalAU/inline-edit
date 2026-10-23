@@ -1,6 +1,7 @@
 import { supportsPlaintextOnly } from './support'
 import { plainText, richHtml, setRichHtml } from './text'
 import { applyImage, imageState } from './images'
+import { linkState, parseLink, restoreLink, serializeLink, showLink } from './links'
 
 const TEXT_KINDS = ['line', 'multi', 'rich']
 
@@ -24,7 +25,8 @@ let lastId = 0
  * about the field (see src/Fields/Field.php describe()).
  *
  * `kind` is how it's edited: 'line' (single-line text), 'multi' (text with line breaks), 'rich'
- * (formatted HTML), 'image', or 'locked' (shown, but only editable in the admin).
+ * (formatted HTML), 'image', 'link' (an <a>, edited in a popover), or 'locked' (shown, but only
+ * editable in the admin).
  */
 export class Region {
 	constructor(data, elements, { isNew = false } = {}) {
@@ -47,7 +49,8 @@ export class Region {
 		// A copy in a duplicated row, which shares the original's name until it's saved.
 		this.isCopy = false
 
-		this.value = data.source // An image's attachment ID; text is read from the page.
+		// An image's attachment ID or a link's { url, title, target }; text is read from the page.
+		this.value = data.kind === 'link' ? parseLink(data.source) : data.source
 		this.initial = ''
 		this.dirty = false
 		this.error = ''
@@ -79,6 +82,9 @@ export class Region {
 		if (this.kind === 'image') {
 			return this.value
 		}
+		if (this.kind === 'link') {
+			return serializeLink(this.value)
+		}
 		if (this.kind === 'rich') {
 			return richHtml(el)
 		}
@@ -87,6 +93,11 @@ export class Region {
 	}
 
 	write(value, elements = this.elements) {
+		if (this.kind === 'link') {
+			this.value = parseLink(value)
+			elements.forEach(el => showLink(el, this.value))
+			return
+		}
 		for (const el of elements) {
 			if (this.kind === 'rich') {
 				setRichHtml(el, value)
@@ -101,16 +112,16 @@ export class Region {
 	 * rendered shortcodes).
 	 */
 	activate() {
-		this.loaded = this.elements.map(el => (this.kind === 'image' ? imageState(el) : el.innerHTML))
+		this.loaded = this.elements.map(el => this.snapshot(el))
 
 		for (const el of this.elements) {
 			el.setAttribute('data-sd-kind', this.kind)
 			el.setAttribute('aria-label', this.label)
 
-			if (this.kind === 'image') {
+			if (this.kind === 'image' || this.kind === 'link') {
 				el.setAttribute('role', 'button')
 				el.setAttribute('tabindex', '0')
-				el.setAttribute('aria-label', `Replace ${this.label.toLowerCase()}`)
+				el.setAttribute('aria-label', `${this.kind === 'image' ? 'Replace' : 'Edit'} ${this.label.toLowerCase()}`)
 			} else if (this.isText) {
 				el.contentEditable = this.kind !== 'rich' && supportsPlaintextOnly ? 'plaintext-only' : 'true'
 				el.spellcheck = true
@@ -119,10 +130,10 @@ export class Region {
 			}
 		}
 
-		if (this.isText) {
+		if (this.isText || this.kind === 'link') {
 			this.write(this.source)
 		}
-		this.value = this.source
+		this.value = this.kind === 'link' ? parseLink(this.source) : this.source
 		if (this.isEditable) {
 			this.initial = this.read()
 		}
@@ -134,13 +145,9 @@ export class Region {
 	deactivate() {
 		this.elements.forEach((el, i) => {
 			EDITING_ATTRIBUTES.forEach(attr => el.removeAttribute(attr))
-			if (this.kind === 'image') {
-				applyImage(el, this.loaded[i])
-			} else if (this.isEditable) {
-				el.innerHTML = this.loaded[i]
-			}
+			this.restore(el, this.loaded[i])
 		})
-		this.value = this.source
+		this.value = this.kind === 'link' ? parseLink(this.source) : this.source
 		this.dirty = false
 		this.error = ''
 	}
@@ -153,6 +160,7 @@ export class Region {
 			this.elements.forEach((el, i) => applyImage(el, this.loaded[i]))
 			this.value = this.source
 		} else {
+			// Text and links both show their stored value again.
 			this.write(this.source)
 		}
 		this.error = ''
@@ -206,8 +214,9 @@ export class Region {
 	/**
 	 * After a save: what's stored now, and what the page should show.
 	 */
-	markSaved({ source, base, rendered }, savedValue) {
-		this.source = source
+	markSaved({ source, value, base, rendered }, savedValue) {
+		// A link comes back as its value; other fields as the text they're edited as.
+		this.source = this.kind === 'link' ? value : source
 		this.base = base
 		this.error = ''
 		// Anything typed while the save was running stays an unsaved change.
@@ -215,10 +224,32 @@ export class Region {
 		if (this.kind === 'image') {
 			this.elements.forEach(el => applyImage(el, rendered))
 			this.loaded = this.elements.map(imageState)
+		} else if (this.kind === 'link') {
+			this.value = parseLink(rendered)
+			this.elements.forEach(el => showLink(el, this.value))
+			this.loaded = this.elements.map(el => this.snapshot(el))
 		} else {
 			this.loaded = this.elements.map(() => rendered)
 		}
 		this.refresh()
+	}
+
+	/** What an element shows, to put back when editing stops (see restore()). */
+	snapshot(el) {
+		if (this.kind === 'image') {
+			return imageState(el)
+		}
+		return this.kind === 'link' ? linkState(el) : el.innerHTML
+	}
+
+	restore(el, loaded) {
+		if (this.kind === 'image') {
+			applyImage(el, loaded)
+		} else if (this.kind === 'link') {
+			restoreLink(el, loaded)
+		} else if (this.isEditable) {
+			el.innerHTML = loaded
+		}
 	}
 
 	/**

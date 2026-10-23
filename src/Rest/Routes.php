@@ -22,6 +22,7 @@ final class Routes
 		private PresenceController $presence,
 		private DraftController $draft,
 		private ShareController $share,
+		private PageController $pages,
 	) {}
 
 	public function register(): void
@@ -64,6 +65,8 @@ final class Routes
 							'from' => ['type' => 'integer', 'minimum' => 0],
 							// ...or a new row of a layout ('' for a repeater).
 							'layout' => $this->layout(),
+							// Hidden from visitors (ACF Extended's toggle).
+							'hidden' => ['type' => 'boolean'],
 						]),
 					],
 				]),
@@ -117,6 +120,20 @@ final class Routes
 				'post' => ['type' => 'string', 'required' => true, 'pattern' => '^[1-9][0-9]{0,19}$'],
 				'revoke' => ['type' => 'boolean', 'default' => false],
 			],
+		]);
+
+		register_rest_route(Plugin::REST_NAMESPACE, '/publish', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->pages, 'publish'],
+			'permission_callback' => $canEdit,
+			'args' => ['post' => ['type' => 'string', 'required' => true, 'pattern' => '^[1-9][0-9]{0,19}$']],
+		]);
+
+		register_rest_route(Plugin::REST_NAMESPACE, '/pages', [
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback' => [$this->pages, 'create'],
+			'permission_callback' => $canEdit,
+			'args' => ['title' => ['type' => 'string', 'default' => '', 'maxLength' => 200]],
 		]);
 
 		register_rest_route(Plugin::REST_NAMESPACE, '/settings', [

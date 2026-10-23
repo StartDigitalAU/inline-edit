@@ -8,10 +8,12 @@ use TheStartLabs\InlineEdit\Fields\VirtualRows;
 use TheStartLabs\InlineEdit\Page\Assets;
 use TheStartLabs\InlineEdit\Page\Registry;
 use TheStartLabs\InlineEdit\Page\TwigFunctions;
+use TheStartLabs\InlineEdit\Posts\DraftPages;
 use TheStartLabs\InlineEdit\Posts\PostUpdater;
 use TheStartLabs\InlineEdit\Preview\SharedPreview;
 use TheStartLabs\InlineEdit\Preview\ShareLinks;
 use TheStartLabs\InlineEdit\Rest\DraftController;
+use TheStartLabs\InlineEdit\Rest\PageController;
 use TheStartLabs\InlineEdit\Rest\PresenceController;
 use TheStartLabs\InlineEdit\Rest\PreviewController;
 use TheStartLabs\InlineEdit\Rest\Routes;
@@ -79,11 +81,13 @@ final class Plugin
 			new PresenceController($resolver),
 			new DraftController($resolver, $drafts),
 			new ShareController($resolver, $links),
+			new PageController($resolver),
 		);
 
 		add_filter('timber/twig/functions', [$twig, 'register']);
 		add_action('template_redirect', [$preview, 'apply'], 0);
 		add_action('wp_footer', [$assets, 'enqueue'], 1);
 		add_action('rest_api_init', [$routes, 'register']);
+		add_filter('acf/validate_post_id', [DraftPages::class, 'ownValues'], 20, 2);
 	}
 }

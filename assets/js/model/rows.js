@@ -5,6 +5,8 @@
  *   (`page_builder_2_content`). New rows get a temporary index.
  * - `origin`: what's saved for it, `{ from: index }` for a stored row or `{ layout }` for a new one.
  * - `layout`: its flexible content layout ('' in a repeater).
+ * - `hidden` / `wasHidden`: hidden from visitors (ACF Extended's toggle), now and when it loaded.
+ *   A hidden row is on the page as a placeholder (see hiddenPlaceholder()).
  */
 const info = new WeakMap()
 
@@ -14,6 +16,15 @@ export function rowInfo(row) {
 
 export function setRowInfo(row, details) {
 	info.set(row, details)
+}
+
+/**
+ * What stands in for a hidden block: a slim bar, only shown while editing.
+ */
+export function hiddenPlaceholder(label) {
+	const el = document.createElement('div')
+	el.setAttribute('data-sd-hidden-row', `Hidden · ${label}`)
+	return el
 }
 
 let lastTemporaryIndex = 1000000

@@ -2,6 +2,8 @@
 
 namespace TheStartLabs\InlineEdit;
 
+use TheStartLabs\InlineEdit\Posts\DraftPages;
+
 /**
  * Whether editing is available on this request.
  */
@@ -28,7 +30,7 @@ final class Access
 			!wp_is_serving_rest_request() &&
 			!is_feed() &&
 			!is_embed() &&
-			!is_preview() &&
+			(!is_preview() || DraftPages::current()) &&
 			!is_customize_preview() &&
 			current_user_can('edit_posts') &&
 			(bool) apply_filters('sd_inline_edit_enabled', true);

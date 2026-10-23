@@ -2,13 +2,14 @@
 
 Front-end editing for Timber and ACF sites. Logged-in editors press **Edit page** (or `E`) and change the page right where it is.
 
-- **Text, rich text and images:**
+- **Text, rich text, links and images:**
   - A formatting bar with the site's own formats and text colours (the same as the admin editor's), plus link search.
+  - Buttons and other links: their text, where they go (with page search) and whether they open in a new tab.
   - The media library.
   - Drag an image file onto an image to upload it.
   - Set an image's focus point on the page.
 - **Blocks:**
-  - Add, move (with the arrows or by dragging), duplicate and delete page builder blocks and repeater rows such as cards.
+  - Add, move (with the arrows or by dragging), duplicate, hide and delete page builder blocks and repeater rows such as cards.
   - A block picker with thumbnails.
   - A settings panel for the fields with nothing to click on the page: toggles, selects, numbers, links and colours.
 - **Undo and redo** for every change. Everything animates into place.
@@ -16,6 +17,10 @@ Front-end editing for Timber and ACF sites. Logged-in editors press **Edit page*
 - **Nothing is published until Save:**
   - Unsaved changes are kept as a draft on the server, so they survive closing the tab or switching computers.
   - A preview link shows them to anyone, without publishing.
+- **New pages:**
+  - Start one from the editor and build it as a draft.
+  - Draft pages can be edited on the page too.
+  - **Publish** puts it live.
 - **Other editors:** the editor holds WordPress's post lock while you work, and says who else is editing.
 
 For anyone who can't edit the page, including all logged-out visitors, nothing is printed and nothing loads.
@@ -38,7 +43,15 @@ Templates mark fields with `editable()`. The element must contain only that fiel
 <span {{ editable('options', 'company_details_phone') }}>{{ options.company_details.phone }}</span>
 ```
 
-It works with the post title and ACF text, textarea, WYSIWYG and image fields, including sub fields (use the full meta name, e.g. `page_builder_0_content`), on posts and options pages. To let editors fill in an empty field, still print the element for them. `editable()` returns `''` for everyone else:
+It works with the post title and ACF text, textarea, WYSIWYG, image and link fields, including sub fields (use the full meta name, e.g. `page_builder_0_content`), on posts and options pages. For a link field, mark its `<a>`, which must contain only the link's text:
+
+```twig
+{% if block.button or editable(post, field_prefix ~ 'button') %}
+	<a class="button" href="{{ block.button.url ?? '#' }}" {{ editable(post, field_prefix ~ 'button') }}>{{ block.button.title }}</a>
+{% endif %}
+```
+
+Keep an editable element's content on the same line as its tag (a formatter breaking it onto its own lines adds whitespace the element then isn't empty of). To let editors fill in an empty field, still print the element for them. `editable()` returns `''` for everyone else:
 
 ```twig
 {% if block.eyebrow or editable(post, field_prefix ~ 'eyebrow') %}
@@ -52,15 +65,25 @@ It works with the post title and ACF text, textarea, WYSIWYG and image fields, i
 
 ```twig
 <div {{ editable_rows(post, 'page_builder', 'partials/block.twig') }}>
-	{% for row in post.meta('page_builder') %}
-		{% include 'partials/block.twig' with { row: row, field_prefix: 'page_builder_' ~ loop.index0 ~ '_' } %}
+	{% for item in rows_of(post, 'page_builder') %}
+		{% include 'partials/block.twig' with { row: item.row, field_prefix: item.prefix } %}
 	{% endfor %}
 </div>
 ```
 
+`rows_of()` gives each row its real field prefix. Don't count with `loop.index0`: blocks hidden with ACF Extended aren't in the loop but keep their place, so counting would give every block after one the wrong field names.
+
 The row template gets `row` (also as `block`), `field_prefix` (the row's own prefix, e.g. `page_builder_2_`) and `post`. Repeaters inside blocks work the same way, e.g. `editable_rows(post, field_prefix ~ 'cards', 'partials/card.twig')`. Without a template, rows can still be moved, duplicated and deleted, but not added, and settings can't be changed.
 
-A block's true/false, select, radio, button group, number, range, URL, email, link and colour fields show in its settings panel automatically.
+A block's true/false, select, radio, button group, number, range, URL, email, link and colour fields show in its settings panel automatically (links that are already editable on the page aren't repeated there).
+
+## Hidden blocks
+
+With ACF Extended's **toggle** action on the field, blocks can be hidden from visitors without deleting them, from the block toolbar or the Blocks panel. Hidden blocks show as a slim bar while editing. This uses ACF Extended's own flag, so blocks hidden in the admin show as hidden here and the other way round (before ACF 6.5; ACF 6.5's own disabled layouts aren't supported yet).
+
+## Draft pages
+
+Pages that aren't published yet (draft, pending or scheduled) can be edited on the page by anyone who can edit them, and **Publish** in the bar puts them live. **New page** in the `⋯` menu starts a draft page to build. While editing a draft, ACF reads the page's own values rather than its latest revision's, which is what the editor saves.
 
 ## Block thumbnails
 

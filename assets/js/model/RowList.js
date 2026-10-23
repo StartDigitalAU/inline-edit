@@ -20,6 +20,7 @@ export class RowList {
 		this.item = data.item
 		this.layouts = data.layouts
 		this.fields = data.fields
+		this.canHide = !!data.canHide
 		this.min = data.min
 		this.max = data.max
 		this.base = data.base
@@ -105,15 +106,25 @@ export class RowList {
 	 * The rows as they'll be saved: each an existing row's index as the page loaded it, or a new row.
 	 */
 	order() {
-		return this.rows().map(row => rowInfo(row).origin)
+		return this.rows().map(row => {
+			const { origin, hidden } = rowInfo(row)
+			return this.canHide ? { ...origin, hidden: !!hidden } : origin
+		})
 	}
 
 	hasChanges() {
-		const order = this.order()
+		const rows = this.rows().map(rowInfo)
 		if (this.original === null) {
-			return order.length > 0
+			return rows.length > 0
 		}
-		return order.length !== this.loadedCount || order.some((origin, i) => origin.from !== i)
+		return (
+			rows.length !== this.loadedCount ||
+			rows.some((info, i) => info.origin.from !== i || !!info.hidden !== !!info.wasHidden)
+		)
+	}
+
+	isHidden(row) {
+		return !!rowInfo(row).hidden
 	}
 
 	/**

@@ -11,7 +11,9 @@ import { FocusEditor } from './components/FocusEditor'
 import { ImageDrop } from './components/ImageDrop'
 import { ImageTools } from './components/ImageTools'
 import { FormatBar } from './components/FormatBar'
+import { LinkFieldEditor } from './components/LinkFieldEditor'
 import { LockedTip } from './components/LockedTip'
+import { NewPageDialog } from './components/NewPageDialog'
 import { OutlinePanel } from './components/outline/OutlinePanel'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { ShortcutsSheet } from './components/ShortcutsSheet'
@@ -37,6 +39,7 @@ export function App({ root }) {
 			<OutlinePanel />
 			<SettingsPanel />
 			<FormatBar />
+			<LinkFieldEditor />
 			<PresenceNotice />
 			<DraftsToast />
 			<UndoToast />
@@ -44,6 +47,7 @@ export function App({ root }) {
 			<DragLayer />
 			<BlockPicker />
 			<DevicePreview />
+			<NewPageDialog />
 			<ShortcutsSheet />
 			<Tooltip root={root} />
 		</>

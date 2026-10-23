@@ -6,6 +6,7 @@ use TheStartLabs\InlineEdit\Drafts\DraftStore;
 use TheStartLabs\InlineEdit\Fields\Resolver;
 use TheStartLabs\InlineEdit\Images\FocusPoints;
 use TheStartLabs\InlineEdit\Plugin;
+use TheStartLabs\InlineEdit\Posts\DraftPages;
 use TheStartLabs\InlineEdit\Posts\Transaction;
 use TheStartLabs\InlineEdit\Preview\ShareLinks;
 use WP_Post;
@@ -57,6 +58,9 @@ final class Assets
 			'presenceEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/presence'),
 			'draftEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/draft'),
 			'shareEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/share'),
+			'publishEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/publish'),
+			'pagesEndpoint' => rest_url(Plugin::REST_NAMESPACE . '/pages'),
+			'canCreatePages' => DraftPages::canCreatePages(),
 			'restRoot' => rest_url(),
 			'nonce' => wp_create_nonce('wp_rest'),
 			'nonceEndpoint' => admin_url('admin-ajax.php?action=rest-nonce'),
@@ -101,6 +105,8 @@ final class Assets
 
 		return [
 			'id' => (string) $post->ID,
+			'status' => $post->post_status,
+			'canPublish' => DraftPages::canPublish($post),
 			// This person's unsaved changes from before, and whether they're shared.
 			'draft' => $this->drafts->get($post->ID),
 			'shared' => $this->links->hasLink($post->ID),

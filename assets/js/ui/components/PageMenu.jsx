@@ -1,6 +1,6 @@
 import { config } from '../../config'
 import { toggleEditing } from '../../services/editing'
-import { menuOpen, revision, shortcutsOpen } from '../../state/signals'
+import { menuOpen, newPageOpen, revision, shortcutsOpen } from '../../state/signals'
 import { useLayoutEffect } from 'preact/hooks'
 import { onArrowKeys } from '../hooks/arrowKeys'
 import { clampLeft, useFloating } from '../hooks/useFloating'
@@ -50,6 +50,20 @@ export function PageMenu({ anchor }) {
 				<MenuLink href={page.revisionsUrl} icon="history" onClick={close}>
 					Revisions
 				</MenuLink>
+			)}
+			{config.canCreatePages && (
+				<button
+					type="button"
+					role="menuitem"
+					class={ITEM}
+					onClick={() => {
+						close()
+						newPageOpen.value = true
+					}}
+				>
+					<Icon name="plus" class="text-subtle" />
+					<span class="flex-1">New page</span>
+				</button>
 			)}
 			{page?.canShare && (
 				<button

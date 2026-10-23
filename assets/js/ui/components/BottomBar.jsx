@@ -1,8 +1,9 @@
 import { useRef } from 'preact/hooks'
-import { MOD } from '../../config'
+import { config, MOD } from '../../config'
 import { pending } from '../../services/changes'
 import { discardChanges, toggleEditing } from '../../services/editing'
 import { history, redo, undo } from '../../services/history'
+import { isDraft, publish } from '../../services/publishing'
 import { save } from '../../services/saving'
 import { toggleOutline } from '../../services/outline'
 import { busy, editing, menuOpen, outlineOpen, picker, saving } from '../../state/signals'
@@ -63,9 +64,15 @@ function EditingActions({ menuButton }) {
 	const { count } = pending.value
 	const locked = saving.value || !!busy.value
 	const list = pageList()
+	const draft = isDraft()
 
 	return (
 		<div class="flex min-w-0 items-center gap-1 max-sm:flex-1" role="toolbar" aria-label="Page editing">
+			{draft && (
+				<span class="ml-1 shrink-0 rounded-md bg-amber/15 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber">
+					Draft
+				</span>
+			)}
 			<div class="min-w-0 max-sm:flex-1">
 				<Status />
 			</div>
@@ -88,9 +95,20 @@ function EditingActions({ menuButton }) {
 			<Button variant="secondary" disabled={locked || !count} onClick={discardChanges}>
 				Discard
 			</Button>
-			<Button variant="primary" disabled={locked || !count} onClick={save} tip="Save changes" keys={[MOD, 'S']}>
-				Save
+			<Button
+				variant={draft ? 'secondary' : 'primary'}
+				disabled={locked || !count}
+				onClick={save}
+				tip={draft ? 'Save the draft' : 'Save changes'}
+				keys={[MOD, 'S']}
+			>
+				{draft ? 'Save draft' : 'Save'}
 			</Button>
+			{draft && config.page.canPublish && (
+				<Button variant="primary" disabled={locked} onClick={publish} tip="Publish this page, with any unsaved changes">
+					Publish
+				</Button>
+			)}
 			<Separator />
 			{list && (
 				<Button
