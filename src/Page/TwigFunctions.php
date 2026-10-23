@@ -66,15 +66,16 @@ final class TwigFunctions
 			return [];
 		}
 
+		$rows = array_values($rows);
 		$stored = acf_get_metadata($post_id, $field);
 		$count = is_array($stored) ? count($stored) : count($rows);
-		$shown = array_values(array_diff(range(0, max(0, $count - 1)), HiddenRows::indexes($post_id, $field)));
+		$hidden = HiddenRows::indexes($post_id, $field);
 
-		return array_map(
-			fn($row, $i) => ['row' => $row, 'prefix' => "{$field}_" . ($shown[$i] ?? $i) . '_'],
-			array_values($rows),
-			array_keys(array_values($rows)),
-		);
+		// Skip hidden rows' places only when they really were left out: if hiding isn't on (ACF
+		// Extended switched off, or its toggle removed from the field), flagged rows still show.
+		$shown = count($rows) === $count - count($hidden) ? array_values(array_diff(range(0, $count - 1), $hidden)) : array_keys($rows);
+
+		return array_map(fn($row, $i) => ['row' => $row, 'prefix' => "{$field}_{$shown[$i]}_"], $rows, array_keys($rows));
 	}
 
 	public function editable(mixed $target, mixed $field): string
