@@ -66,6 +66,12 @@
 	filter: brightness(0.88);
 }
 
+/* Templates still print an empty field's element for editors so it can be filled in. Until they're
+   editing, hide it, so the page looks as visitors see it rather than showing an empty button. */
+html:not(.sd-inline-editing) [data-sd-edit]:empty:not(img) {
+	display: none;
+}
+
 /* Empty fields stay clickable, labelled with the field name. */
 .sd-inline-editing [data-sd-edit]:empty {
 	min-height: 1.5em;
